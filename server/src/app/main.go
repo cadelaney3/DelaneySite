@@ -9,7 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
+//var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
+var validPath = regexp.MustCompile("^/(ws|view)")
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -79,6 +80,8 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 }
 
 func main() {
+	http.HandleFunc("/ws", makeHandler(serveWs))
+	//setupRoutes()
 	http.HandleFunc("/view/", makeHandler(handler))
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
