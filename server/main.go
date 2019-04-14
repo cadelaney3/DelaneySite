@@ -6,40 +6,12 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/gorilla/websocket"
+	"github.com/cadelaney3/delaneySite/pkg/websocket"
 )
 
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view)")
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
 
-	// We'll need to check the origin of our connection
-	// this will allow us to make requests from our React
-	// development server to here.
-	// For now, we'll do no
-	CheckOrigin: func(r *http.Request) bool { return true },
-}
-
-func reader(conn *websocket.Conn) {
-	for {
-		// read in a message
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		// print out that message for clarity
-		fmt.Println(string(p))
-
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
-
-	}
-}
 
 // define our WebSocket endpoint
 func serveWs(w http.ResponseWriter, r *http.Request) {
