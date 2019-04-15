@@ -13,7 +13,6 @@ class App extends Component {
       prevState: null,
       chatHistory: []
     }
-    //connect();
   }
 
   componentDidMount() {
@@ -25,7 +24,6 @@ class App extends Component {
       console.log(this.state);
     });
   }
-
 
   send(event) {
     if(event.keyCode === 13) {
