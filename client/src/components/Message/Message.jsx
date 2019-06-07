@@ -14,12 +14,14 @@ const styles = theme => ({
     inline: {
       display: 'inline',
     },
-  });
+});
 
 class Message extends Component {
     constructor(props) {
         super(props);
-        let temp = JSON.parse(this.props.message);
+        console.log(this.props.message)
+        let temp = JSON.parse(JSON.stringify(this.props.message));
+        console.log("This is temp: ", temp.body)
         this.state = {
             message: temp
         };
