@@ -1,11 +1,77 @@
 import React, { Component } from 'react';
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import './App.css';
 import Header from './components/Header/Header';
 import ChatHistory from './components/ChatHistory/ChatHistory';
 import ChatInput from './components/ChatInput/ChatInput';
+import Home from './components/Home/Home';
 import { connect, sendMsg } from "./api";
 
-class App extends Component {
+function App() {
+  return (
+    <Router>
+      <div>
+        <Header />
+
+        <Route expact path="/" component={HomePage} />
+        <Route path="/ws" component={WS} />
+      </div>
+    </Router>
+  );
+}
+
+class HomePage extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      error: null,
+      isLoaded: false,
+      items: []
+    };
+  }
+
+  componentDidMount() {
+    fetch("http://localhost:8080/home")
+    .then(res => res.json())
+    .then(
+      (result) => {
+        this.setState({
+          isLoaded: true,
+          items: result.Items
+        });
+      },
+      (error) => {
+        this.setState({
+          isLoaded: true,
+          error
+        });
+      }
+    )
+  }
+
+  render() {
+    const { error, isLoaded, items } = this.state;
+    console.log(items.body);
+    console.log(typeof(items.body));
+    console.log(this.state);
+    if (error) {
+      return <div>Error: {error.message}</div>;
+    } else if (!isLoaded) {
+      return <div>Loading...</div>;
+    } else {
+      console.log("got here");
+      return (
+        <div className="HomePage">
+          <Header />
+          <Home items={items} />
+        </div>
+      );
+    }
+  }
+
+}
+
+class WS extends Component {
   constructor(props) {
     super(props);
 
@@ -34,8 +100,7 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <Header />
+      <div className="WS">
         <ChatHistory chatHistory={this.state.chatHistory} />
         <ChatInput send={this.send} />
       </div>
