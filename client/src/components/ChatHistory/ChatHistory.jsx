@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import Message from '../Message/Message';
-//import "./ChatHistory.scss";
 import { withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 

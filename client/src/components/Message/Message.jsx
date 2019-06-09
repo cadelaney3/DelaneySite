@@ -19,16 +19,14 @@ const styles = theme => ({
 class Message extends Component {
     constructor(props) {
         super(props);
-        console.log(this.props.message)
-        let temp = JSON.parse(JSON.stringify(this.props.message));
-        console.log("This is temp: ", temp.body)
+        let temp = JSON.parse(this.props.message);
+
         this.state = {
             message: temp
         };
     }
 
     render() {
-        //const { classes } = this.props;
         return (
             <ListItem alignItems="flex-start">
                 <ListItemAvatar>
