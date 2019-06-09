@@ -10,10 +10,10 @@ import { connect, sendMsg } from "./api";
 function App() {
   return (
     <Router>
-      <div>
+      <div className="App">
         <Header />
 
-        <Route expact path="/" component={HomePage} />
+        <Route expact path="/home" component={HomePage} />
         <Route path="/ws" component={WS} />
       </div>
     </Router>
@@ -23,6 +23,7 @@ function App() {
 class HomePage extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
       error: null,
       isLoaded: false,
@@ -37,7 +38,7 @@ class HomePage extends Component {
       (result) => {
         this.setState({
           isLoaded: true,
-          items: result.Items
+          items: result
         });
       },
       (error) => {
@@ -51,18 +52,14 @@ class HomePage extends Component {
 
   render() {
     const { error, isLoaded, items } = this.state;
-    console.log(items.body);
-    console.log(typeof(items.body));
-    console.log(this.state);
+    console.log(items.facts);
     if (error) {
       return <div>Error: {error.message}</div>;
     } else if (!isLoaded) {
       return <div>Loading...</div>;
     } else {
-      console.log("got here");
       return (
         <div className="HomePage">
-          <Header />
           <Home items={items} />
         </div>
       );
