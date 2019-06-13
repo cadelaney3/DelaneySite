@@ -7,10 +7,21 @@ import (
 	"regexp"
 	"encoding/json"
 	"database/sql"
+	"io/ioutil"
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
 )
+
+var keys = make(map[string]map[string]string)
+
+type postgresConn struct {
+	host string
+	port int 
+	user string
+	password string 
+	dbname string
+}
 
 const (
 	host     = "localhost"
@@ -18,7 +29,7 @@ const (
 	user     = "cdswaggy"
 	password = "Theucanes3"
 	dbname   = "delaneysite"
-  )
+)
 
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home)")
@@ -122,13 +133,27 @@ func setupRoutes() {
 }
 
 func main() {
+	f, err := ioutil.ReadFile("../keys.json")
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(f, &keys)
+
+	postgres := postgresConn{
+		host: "localhost",
+		port: 5432,
+		user: keys["POSTGRES"]["USER"],
+		password: keys["POSTGRES"]["PASSWORD"],
+		dbname: "delaneysite",
+	}
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
     "password=%s dbname=%s sslmode=disable",
-	host, port, user, password, dbname)
+	postgres.host, postgres.port, postgres.user, postgres.password, postgres.dbname)
 	db, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
-	panic(err)
+		panic(err)
 	}
 	defer db.Close()
 
