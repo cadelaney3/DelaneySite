@@ -23,14 +23,6 @@ type postgresConn struct {
 	dbname string
 }
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "cdswaggy"
-	password = "Theucanes3"
-	dbname   = "delaneysite"
-)
-
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home)")
 
