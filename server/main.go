@@ -6,9 +6,19 @@ import (
 	"net/http"
 	"regexp"
 	"encoding/json"
+	"database/sql"
 
+	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
 )
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "cdswaggy"
+	password = "Theucanes3"
+	dbname   = "delaneysite"
+  )
 
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home)")
@@ -112,6 +122,22 @@ func setupRoutes() {
 }
 
 func main() {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+    "password=%s dbname=%s sslmode=disable",
+	host, port, user, password, dbname)
+	db, err := sql.Open("postgres", psqlInfo)
+
+	if err != nil {
+	panic(err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+	  panic(err)
+	} 
+	fmt.Println("Successfully connected!")
+
 	setupRoutes()
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
