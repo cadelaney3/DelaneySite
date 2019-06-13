@@ -6,17 +6,27 @@ import ChatHistory from './components/ChatHistory/ChatHistory';
 import ChatInput from './components/ChatInput/ChatInput';
 import Home from './components/Home/Home';
 import { connect, sendMsg } from "./api";
+import { createMuiTheme } from '@material-ui/core/styles';
+import { MuiThemeProvider } from '@material-ui/core/styles';
+
+const theme = createMuiTheme({
+  palette: {
+    type: 'dark',
+  }
+})
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <Header />
-
+        <MuiThemeProvider theme={theme} >
+          <Header theme={theme} />
         <Route expact path="/home" component={HomePage} />
         <Route path="/ws" component={WS} />
+        </MuiThemeProvider>
       </div>
     </Router>
+
   );
 }
 
