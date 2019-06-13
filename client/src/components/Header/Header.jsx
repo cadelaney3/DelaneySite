@@ -10,23 +10,12 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import { fade } from '@material-ui/core/styles/colorManipulator';
 import { withStyles } from '@material-ui/core/styles';
-import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MailIcon from '@material-ui/icons/Mail';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import MoreIcon from '@material-ui/icons/MoreVert';
-import classNames from 'classnames';
-import Drawer from '@material-ui/core/Drawer';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import List from '@material-ui/core/List';
-import Divider from '@material-ui/core/Divider';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
 
 const styles = theme => ({
   root: {
@@ -41,13 +30,16 @@ const styles = theme => ({
     [theme.breakpoints.up('sm')]: {
       display: 'block',
     },
+    color: "#ffd600",
+    fontSize: "32px",
+    fontFamily: "Lobster",
   },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
+    backgroundColor: fade(theme.palette.common.black, 0.15),
     '&:hover': {
-      backgroundColor: fade(theme.palette.common.white, 0.25),
+      backgroundColor: fade(theme.palette.common.black, 0.25),
     },
     marginRight: theme.spacing.unit * 2,
     marginLeft: 0,
@@ -73,6 +65,8 @@ const styles = theme => ({
       width: 'auto',
       display: 'block',
     },
+    color: "#ffd600",
+    fontFamily: 'Roboto',
   },
   inputRoot: {
     color: 'inherit',
@@ -106,6 +100,8 @@ const styles = theme => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
+    color: "#ffd600",
+    background: fade(theme.palette.common.black, 0.25),
   },
   hide: {
     display: 'none',
@@ -192,13 +188,11 @@ class PrimarySearchAppBar extends React.Component {
       <div>
         <CssBaseline />
         <AppBar 
-          position="fixed"
-          className={classNames(classes.appBar, {
-            [classes.appBarShift]: open,
-          })}
+          position="static"
+          className={classes.appBar}
         >
           <Toolbar disableGutters={!open}>
-            <Typography className={classes.title} variant="h6" color="inherit" noWrap>
+            <Typography className={classes.title} variant="h6" noWrap>
               CDswaggy
             </Typography>
             <div className={classes.search}>
@@ -213,27 +207,17 @@ class PrimarySearchAppBar extends React.Component {
                 }}
               />
             </div>
-            <Typography className={classes.pageLink} variant="h6" color="inherit" noWrap>
+            <Typography className={classes.pageLink} variant="h6" noWrap>
               About
             </Typography>
-            <Typography className={classes.pageLink} variant="h6" color="inherit" noWrap>
+            <Typography className={classes.pageLink} variant="h6" noWrap>
               Tutorials
             </Typography>
-            <Typography className={classes.pageLink} variant="h6" color="inherit" noWrap>
+            <Typography className={classes.pageLink} variant="h6" noWrap>
               Projects
             </Typography>
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
-              <IconButton color="inherit">
-                <Badge badgeContent={4} color="secondary">
-                  <MailIcon />
-                </Badge>
-              </IconButton>
-              <IconButton color="inherit">
-                <Badge badgeContent={17} color="secondary">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
               <IconButton
                 aria-owns={isMenuOpen ? 'material-appbar' : undefined}
                 aria-haspopup="true"
