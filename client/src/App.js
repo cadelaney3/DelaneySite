@@ -5,6 +5,7 @@ import Header from './components/Header/Header';
 import ChatHistory from './components/ChatHistory/ChatHistory';
 import ChatInput from './components/ChatInput/ChatInput';
 import Home from './components/Home/Home';
+import SignIn from './components/SignIn/SignIn';
 import { connect, sendMsg } from "./api";
 import { createMuiTheme } from '@material-ui/core/styles';
 import { MuiThemeProvider } from '@material-ui/core/styles';
@@ -23,6 +24,7 @@ function App() {
           <Header theme={theme} />
         <Route expact path="/home" component={HomePage} />
         <Route path="/ws" component={WS} />
+        <Route path="/signin" component={SignIn} />
         </MuiThemeProvider>
       </div>
     </Router>
