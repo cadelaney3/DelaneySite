@@ -23,16 +23,15 @@ type postgresConn struct {
 	dbname string
 }
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "cdswaggy"
-	password = "Theucanes3"
-	dbname   = "delaneysite"
-)
-
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home)")
+
+type credentials struct {
+	username string `json:"username", db:"username"`
+	password string `json:"password", db:"password"`
+	email string `json:"email", db:"email"`
+
+}
 
 type homeResponse struct {
 	Body string `json:"body"`
@@ -132,7 +131,7 @@ func setupRoutes() {
 	http.HandleFunc("/home", makeHandler(homeHandler))
 }
 
-func main() {
+func db() {
 	f, err := ioutil.ReadFile("../keys.json")
 	if err != nil {
 		panic(err)
@@ -162,8 +161,13 @@ func main() {
 	  panic(err)
 	} 
 	fmt.Println("Successfully connected!")
+}
+
+func main() {
 
 	setupRoutes()
+	db()
+
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
