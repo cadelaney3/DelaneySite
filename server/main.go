@@ -26,10 +26,10 @@ type postgresConn struct {
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home)")
 
-type credentials struct {
-	username string `json:"username", db:"username"`
-	password string `json:"password", db:"password"`
-	email string `json:"email", db:"email"`
+type Credentials struct {
+	Username string `json:"username", db:"username"`
+	Password string `json:"password", db:"password"`
+	Email string `json:"email", db:"email"`
 
 }
 
