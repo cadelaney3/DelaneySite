@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -13,6 +13,12 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import { lakecomo } from '../../images/lakecomo.jpg'
+
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Credentials": true,
+  Accept: "application/json"
+};
 
 function MadeWithLove() {
   return (
@@ -31,7 +37,7 @@ const useStyles = makeStyles(theme => ({
     height: '100vh',
   },
   image: {
-    backgroundImage: { lakecomo },
+    backgroundImage: lakecomo,
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
@@ -55,8 +61,36 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+
+
 export default function SignIn() {
   const classes = useStyles();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleUsernameChange = (event) => {
+    event.persist();
+    setUsername(event.target.value);
+  };
+
+  const handlePasswordChange = (event) => {
+    event.persist();
+    setPassword(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log(JSON.stringify({ username: username, password: password}));
+    fetch("http://172.17.141.84:8080/signin", {
+      method: "PUT",
+      headers: headers,
+      body: JSON.stringify({ username: username, password: password })
+    })
+      .then(results => results.json())
+      .catch( err => {
+        return Promise.reject();
+      })
+  }
 
   return (
     <Grid container component="main" className={classes.root}>
@@ -70,7 +104,7 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <form className={classes.form} noValidate>
+          <form className={classes.form} noValidate onSubmit={handleSubmit}>
             <TextField
               variant="outlined"
               margin="normal"
@@ -78,8 +112,10 @@ export default function SignIn() {
               fullWidth
               id="email"
               label="Email Address"
-              name="email"
-              autoComplete="email"
+              name="username"
+              //autoComplete="email"
+              value={username}
+              onChange={handleUsernameChange}
               autoFocus
             />
             <TextField
@@ -91,7 +127,9 @@ export default function SignIn() {
               label="Password"
               type="password"
               id="password"
-              autoComplete="current-password"
+              value={password}
+              onChange={handlePasswordChange}
+              //autoComplete="current-password"
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
