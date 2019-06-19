@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"database/sql"
 	"io/ioutil"
+	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
@@ -41,6 +42,11 @@ type homeResponse struct {
 type creds struct {
 	Username string `json:"username"`
 	Password string `password:"password"`
+}
+
+type response struct {
+	Status int `json:"status"`
+	Message string `json:"message"`
 }
 
 // define our WebSocket endpoint
@@ -121,13 +127,15 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("This is credents: ", credents.Password)
+	fmt.Println("This is credents: ", credents.Username)
 
 	result := db.QueryRow("select password from account where username=$1", credents.Username)
 	if err != nil {
 		// If there is an issue with the database, return a 500 error
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		resp, _ := json.Marshal(`{"status":500, "message": "Internal server error"}`)
+		w.Write(resp)
 		return
 	}
 
@@ -135,17 +143,35 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 	// Store the obtained password in `storedCreds`
 	err = result.Scan(&storedCreds.Password)
 	if err != nil {
+		log.Println(err)
 		// If an entry with the username does not exist, send an "Unauthorized"(401) status
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusUnauthorized)
+			resp, _ := json.Marshal(`{"status":401, "message": "Username does not exist"}`)
+			w.Write(resp)
 			return
 		}
-		fmt.Println(err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		resp, _ := json.Marshal(`{"status":500, "message": "Internal server error"}`)
+		w.Write(resp)
 		return
 	}
 
-	resp, err := json.Marshal(`{"status":200, "message": "All good!"}`)
+	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(credents.Password)); err != nil {
+		// If the two passwords don't match, return a 401 status
+		log.Println(err)
+		w.WriteHeader(http.StatusUnauthorized)
+		resp, _ := json.Marshal(`{"status":401, "message": "Incorrect password"}`)
+		w.Write(resp)
+		return
+	}
+
+	respo := response{
+		Status: 200,
+		Message: "All good",
+	}
+	resp, err := json.Marshal(respo)
 	if err != nil {
 		log.Println(err)
 	}
