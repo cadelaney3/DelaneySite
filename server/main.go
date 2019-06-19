@@ -14,6 +14,7 @@ import (
 )
 
 var keys = make(map[string]map[string]string)
+var db *sql.DB
 
 type postgresConn struct {
 	host string
@@ -30,12 +31,16 @@ type Credentials struct {
 	Username string `json:"username", db:"username"`
 	Password string `json:"password", db:"password"`
 	Email string `json:"email", db:"email"`
-
 }
 
 type homeResponse struct {
 	Body string `json:"body"`
 	Facts []string `json:"facts"`
+}
+
+type creds struct {
+	Username string `json:"username"`
+	Password string `password:"password"`
 }
 
 // define our WebSocket endpoint
@@ -102,7 +107,60 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Write(resB)
-	log.Println("I am Chris Delaney")
+}
+
+func signIn(w http.ResponseWriter, r *http.Request) {
+
+	credents := creds{}
+
+	err := json.NewDecoder(r.Body).Decode(&credents)
+	if err != nil {
+		log.Println(err)		
+	}
+	if credents == (creds{}) {
+		return
+	}
+
+	fmt.Println("This is credents: ", credents.Password)
+
+	result := db.QueryRow("select password from account where username=$1", credents.Username)
+	if err != nil {
+		// If there is an issue with the database, return a 500 error
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	storedCreds := &creds{}
+	// Store the obtained password in `storedCreds`
+	err = result.Scan(&storedCreds.Password)
+	if err != nil {
+		// If an entry with the username does not exist, send an "Unauthorized"(401) status
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := json.Marshal(`{"status":200, "message": "All good!"}`)
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Write(resp)
+}
+
+func signInHandler(fn func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		fn(w, r)
+	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -129,9 +187,10 @@ func setupRoutes() {
 	})
 	http.HandleFunc("/view/", makeHandler(handler))
 	http.HandleFunc("/home", makeHandler(homeHandler))
+	http.HandleFunc("/signin", signInHandler(signIn))
 }
 
-func db() {
+func connDB() {
 	f, err := ioutil.ReadFile("../keys.json")
 	if err != nil {
 		panic(err)
@@ -139,7 +198,7 @@ func db() {
 	err = json.Unmarshal(f, &keys)
 
 	postgres := postgresConn{
-		host: "localhost",
+		host: "172.17.141.84",
 		port: 5432,
 		user: keys["POSTGRES"]["USER"],
 		password: keys["POSTGRES"]["PASSWORD"],
@@ -149,12 +208,12 @@ func db() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
     "password=%s dbname=%s sslmode=disable",
 	postgres.host, postgres.port, postgres.user, postgres.password, postgres.dbname)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	//defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
@@ -166,7 +225,7 @@ func db() {
 func main() {
 
 	setupRoutes()
-	db()
+	connDB()
 
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
