@@ -42,7 +42,7 @@ class HomePage extends Component {
   }
 
   componentDidMount() {
-    fetch("http://localhost:8080/home")
+    fetch("http://172.17.141.84:8080/home")
     .then(res => res.json())
     .then(
       (result) => {
