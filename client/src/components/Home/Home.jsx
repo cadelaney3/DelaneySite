@@ -15,7 +15,7 @@ import linkedinLogo from '../../images/In-Blue-26@2x.png';
 const styles = theme => ({
   root: {
     flexGrow: 1,
-    paddingTop: theme.spacing.unit * 4,
+    paddingTop: theme.spacing(4),
   },
   image: {
       width: 256,
