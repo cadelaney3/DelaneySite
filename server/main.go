@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"io/ioutil"
 	"golang.org/x/crypto/bcrypt"
+	"os"
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
@@ -19,8 +20,9 @@ var keys = make(map[string]map[string]string)
 var db *sql.DB
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-	key = []byte("dundieawardwinner6272111")
+	key = []byte(os.Getenv("SESSION_KEY"))
 	store = sessions.NewCookieStore(key)
+
 )
 
 type postgresConn struct {
@@ -138,8 +140,6 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("This is credents: ", credents.Username)
-
 	result := db.QueryRow("select password from account where username=$1", credents.Username)
 	if err != nil {
 		// If there is an issue with the database, return a 500 error
@@ -242,12 +242,7 @@ func setupRoutes() {
 	http.HandleFunc("/signin", signInHandler(signIn))
 }
 
-func connDB() {
-	f, err := ioutil.ReadFile("../keys.json")
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(f, &keys)
+func connDB(keys map[string]map[string]string) {
 
 	postgres := postgresConn{
 		host: "localhost",
@@ -260,6 +255,8 @@ func connDB() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
     "password=%s dbname=%s sslmode=disable",
 	postgres.host, postgres.port, postgres.user, postgres.password, postgres.dbname)
+
+	var err error
 	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
@@ -289,8 +286,14 @@ func secret(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	f, err := ioutil.ReadFile("../keys.json")
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(f, &keys)
+
 	setupRoutes()
-	connDB()
+	connDB(keys)
 
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
