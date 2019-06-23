@@ -8,12 +8,20 @@ import (
 	"encoding/json"
 	"database/sql"
 	"io/ioutil"
+	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
+	"github.com/gorilla/sessions"
 )
 
 var keys = make(map[string]map[string]string)
+var db *sql.DB
+var (
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+	key = []byte("dundieawardwinner6272111")
+	store = sessions.NewCookieStore(key)
+)
 
 type postgresConn struct {
 	host string
@@ -26,9 +34,25 @@ type postgresConn struct {
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home)")
 
+type Credentials struct {
+	Username string `json:"username", db:"username"`
+	Password string `json:"password", db:"password"`
+	Email string `json:"email", db:"email"`
+}
+
 type homeResponse struct {
 	Body string `json:"body"`
 	Facts []string `json:"facts"`
+}
+
+type creds struct {
+	Username string `json:"username"`
+	Password string `password:"password"`
+}
+
+type response struct {
+	Status int `json:"status"`
+	Message string `json:"message"`
 }
 
 // define our WebSocket endpoint
@@ -95,7 +119,100 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Write(resB)
-	log.Println("I am Chris Delaney")
+}
+
+func signIn(w http.ResponseWriter, r *http.Request) {
+
+	session, _ := store.Get(r, "cookie-name")
+
+	// Authentication goes here
+	// ...
+
+	credents := creds{}
+
+	err := json.NewDecoder(r.Body).Decode(&credents)
+	if err != nil {
+		log.Println(err)		
+	}
+	if credents == (creds{}) {
+		return
+	}
+
+	fmt.Println("This is credents: ", credents.Username)
+
+	result := db.QueryRow("select password from account where username=$1", credents.Username)
+	if err != nil {
+		// If there is an issue with the database, return a 500 error
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		resp, _ := json.Marshal(`{"status":500, "message": "Internal server error"}`)
+		w.Write(resp)
+		return
+	}
+
+	storedCreds := &creds{}
+	// Store the obtained password in `storedCreds`
+	err = result.Scan(&storedCreds.Password)
+	if err != nil {
+		log.Println(err)
+		// If an entry with the username does not exist, send an "Unauthorized"(401) status
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusUnauthorized)
+			respo := response{
+				Status: 401,
+				Message: "Invalid username",
+			}
+			resp, _ := json.Marshal(respo)
+			w.Write(resp)
+			return
+		}
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		respo := response{
+			Status: 500,
+			Message: "Internal server error",
+		}
+		resp, _ := json.Marshal(respo)
+		w.Write(resp)
+		return
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(credents.Password)); err != nil {
+		// If the two passwords don't match, return a 401 status
+		log.Println(err)
+		w.WriteHeader(http.StatusUnauthorized)
+		respo := response{
+			Status: 401,
+			Message: "Incorrect password",
+		}
+		resp, _ := json.Marshal(respo)
+		w.Write(resp)
+		return
+	}
+
+	respo := response{
+		Status: 200,
+		Message: "All good",
+	}
+	resp, err := json.Marshal(respo)
+	if err != nil {
+		log.Println(err)
+	}
+	// Set user as authenticated
+	session.Values["authenticated"] = true
+	session.Save(r, w)
+
+	w.Write(resp)
+}
+
+func signInHandler(fn func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		fn(w, r)
+	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -122,9 +239,10 @@ func setupRoutes() {
 	})
 	http.HandleFunc("/view/", makeHandler(handler))
 	http.HandleFunc("/home", makeHandler(homeHandler))
+	http.HandleFunc("/signin", signInHandler(signIn))
 }
 
-func main() {
+func connDB() {
 	f, err := ioutil.ReadFile("../keys.json")
 	if err != nil {
 		panic(err)
@@ -142,20 +260,38 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
     "password=%s dbname=%s sslmode=disable",
 	postgres.host, postgres.port, postgres.user, postgres.password, postgres.dbname)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	//defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
 	  panic(err)
 	} 
 	fmt.Println("Successfully connected!")
+}
+
+func secret(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "cookie-name")
+
+	// Check if user is authenticated
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Print secret message
+	fmt.Fprintln(w, "The cake is a lie!")
+}
+
+func main() {
 
 	setupRoutes()
+	connDB()
+
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

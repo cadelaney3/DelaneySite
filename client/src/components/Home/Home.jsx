@@ -15,11 +15,11 @@ import linkedinLogo from '../../images/In-Blue-26@2x.png';
 const styles = theme => ({
   root: {
     flexGrow: 1,
-    paddingTop: theme.spacing.unit * 4,
+    paddingTop: theme.spacing(4),
   },
   image: {
-      width: 256,
-      height: 256,
+      width: 270,
+      height: 270,
   },
   img: {
       margin: 'auto',
@@ -28,8 +28,8 @@ const styles = theme => ({
       maxHeight: '100%',
   },
   firstColPaper: {
-      width: 256,
-      padding: 8,
+      width: 270,
+      padding: 4,
       margin: 'auto',
   },
   contentPaper: {
@@ -42,11 +42,13 @@ const styles = theme => ({
   link: {
     textDecoration: 'none',
     color: '#ffd600',
+    align: 'left'
   },
   avatar: {
       width: "25px",
       height: "25px",
       marginTop: '5px',
+      marginRight: '8px'
   },
   typography: {
       paddingTop: "8px",
@@ -61,13 +63,17 @@ const styles = theme => ({
   octicon: {
       height: '25px',
       width: '25px',
-      paddingX: '3px',
+      marginRight: '8px',
       verticalAlign: 'center',
       color: 'white',
   },
 });
 
 class Home extends Component {
+    constructor(props) {
+        super(props);
+    }
+    
     render() {
       const { classes } = this.props;   
       const facts = this.props.items.facts.map(fact =>
@@ -89,13 +95,13 @@ class Home extends Component {
                             </ButtonBase>
                         </Grid>
                         <Grid item>
-                            <Paper className={classes.firstColPaper}>
+                            <Paper className={classes.firstColPaper} align='left'>
                                     <Link href="https://github.com/cadelaney3/" className={classes.link} target="_blank" rel="noopener" >
                                         <Octicon className={classes.octicon} icon={MarkGithub} ariaLabel="GitHub" noWrap />
                                         {"https://github.com/cadelaney3"}
                                     </Link>
                                     <Link href="https://linked.com/in/cadelaney3/" className={classes.link} target="_blank" rel="noopener">
-                                    <Grid container justify="center" alignItems="center">
+                                    <Grid container alignItems="center">
                                         <Avatar className={classes.avatar} alt="in" src={linkedinLogo} inline="true" />
                                         {"https://linkedin.com/in/cadelaney3"}
                                     </Grid>
