@@ -12,7 +12,7 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import { lakecomo } from '../../images/lakecomo.jpg'
+import lakecomo from '../../images/lakecomo.jpg';
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
@@ -37,7 +37,7 @@ const useStyles = makeStyles(theme => ({
     height: '100vh',
   },
   image: {
-    backgroundImage: lakecomo,
+    backgroundImage: `url( ${lakecomo} )`,
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
@@ -59,14 +59,19 @@ const useStyles = makeStyles(theme => ({
   submit: {
     margin: theme.spacing(3, 0, 2),
   },
+  typography: {
+    color: "red",
+  },
 }));
 
 
 
-export default function SignIn() {
+export default function SignIn(props) {
   const classes = useStyles();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleUsernameChange = (event) => {
     event.persist();
@@ -80,14 +85,23 @@ export default function SignIn() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(JSON.stringify({ username: username, password: password}));
-    fetch("http://172.17.141.84:8080/signin", {
-      method: "PUT",
+    fetch("http://172.17.21.104:8080/signin", {
+      method: "POST",
       headers: headers,
       body: JSON.stringify({ username: username, password: password })
     })
       .then(results => results.json())
+      .then(data => {
+        if (data.status === 200) {
+          props.handleSignIn();
+          props.history.push("/home");
+        } else {
+          setErrorMessage(data.message);
+          setIsError(true);
+        }
+      })
       .catch( err => {
+        console.log(err);
         return Promise.reject();
       })
   }
@@ -113,7 +127,6 @@ export default function SignIn() {
               id="email"
               label="Email Address"
               name="username"
-              //autoComplete="email"
               value={username}
               onChange={handleUsernameChange}
               autoFocus
@@ -129,8 +142,12 @@ export default function SignIn() {
               id="password"
               value={password}
               onChange={handlePasswordChange}
-              //autoComplete="current-password"
             />
+            {(isError) &&
+              <Typography variant="body2" className={classes.typography}>
+                {errorMessage}
+              </Typography>
+            }
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"

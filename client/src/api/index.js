@@ -1,5 +1,5 @@
-var socket = new WebSocket("ws://localhost:8080/ws");
-socket = new WebSocket("ws://172.17.141.84:8080/ws");
+//var socket = new WebSocket("ws://localhost:8080/ws");
+var socket = new WebSocket("ws://172.17.21.104:8080/ws");
 
 let connect = cb => {
     console.log("Attempting Connection...");
