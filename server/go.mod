@@ -3,7 +3,7 @@ module github.com/cadelaney3/delaneySite
 go 1.11
 
 require (
-	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/sessions v1.1.3 // indirect
 	github.com/gorilla/websocket v1.4.0
