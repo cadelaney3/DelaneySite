@@ -12,10 +12,16 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
+	"github.com/gorilla/sessions"
 )
 
 var keys = make(map[string]map[string]string)
 var db *sql.DB
+var (
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+	key = []byte("dundieawardwinner6272111")
+	store = sessions.NewCookieStore(key)
+)
 
 type postgresConn struct {
 	host string
@@ -117,6 +123,11 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func signIn(w http.ResponseWriter, r *http.Request) {
 
+	session, _ := store.Get(r, "cookie-name")
+
+	// Authentication goes here
+	// ...
+
 	credents := creds{}
 
 	err := json.NewDecoder(r.Body).Decode(&credents)
@@ -147,13 +158,21 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		// If an entry with the username does not exist, send an "Unauthorized"(401) status
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusUnauthorized)
-			resp, _ := json.Marshal(`{"status":401, "message": "Username does not exist"}`)
+			respo := response{
+				Status: 401,
+				Message: "Invalid username",
+			}
+			resp, _ := json.Marshal(respo)
 			w.Write(resp)
 			return
 		}
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		resp, _ := json.Marshal(`{"status":500, "message": "Internal server error"}`)
+		respo := response{
+			Status: 500,
+			Message: "Internal server error",
+		}
+		resp, _ := json.Marshal(respo)
 		w.Write(resp)
 		return
 	}
@@ -162,7 +181,11 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		// If the two passwords don't match, return a 401 status
 		log.Println(err)
 		w.WriteHeader(http.StatusUnauthorized)
-		resp, _ := json.Marshal(`{"status":401, "message": "Incorrect password"}`)
+		respo := response{
+			Status: 401,
+			Message: "Incorrect password",
+		}
+		resp, _ := json.Marshal(respo)
 		w.Write(resp)
 		return
 	}
@@ -175,6 +198,9 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	// Set user as authenticated
+	session.Values["authenticated"] = true
+	session.Save(r, w)
 
 	w.Write(resp)
 }
@@ -224,7 +250,7 @@ func connDB() {
 	err = json.Unmarshal(f, &keys)
 
 	postgres := postgresConn{
-		host: "172.17.141.84",
+		host: "localhost",
 		port: 5432,
 		user: keys["POSTGRES"]["USER"],
 		password: keys["POSTGRES"]["PASSWORD"],
@@ -246,6 +272,19 @@ func connDB() {
 	  panic(err)
 	} 
 	fmt.Println("Successfully connected!")
+}
+
+func secret(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "cookie-name")
+
+	// Check if user is authenticated
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Print secret message
+	fmt.Fprintln(w, "The cake is a lie!")
 }
 
 func main() {
