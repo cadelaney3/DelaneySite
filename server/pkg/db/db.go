@@ -70,16 +70,16 @@ func InitPostgresDB(keys map[string]map[string]string) *sql.DB {
 	postgres.host, postgres.port, postgres.user, postgres.password, postgres.dbname)
 
 	//var err error
-	db, err := sql.Open("postgres", psqlInfo)
+	postgresDB, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = db.Ping()
+	err = postgresDB.Ping()
 	if err != nil {
 	  panic(err)
 	} 
 	fmt.Println("Successfully connected!")
-	return db
+	return postgresDB
 }
