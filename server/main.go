@@ -75,21 +75,30 @@ func serveWs(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	body := `I am Chris Delaney. I was born and raised in Frenchtown, Montana. I do not a ride my horse to school or say
-			 hello by tipping my cowboy hat, but I do have Montanan characteristics. I enjoy the outdoors
-			 and outdoor activities, like hiking, fishing, hunting. My main outdoor activity is golfing,
-			 however. I have been golfing for the last 8 years or so. Lately, golf serves more as a
-			 hobby, but I still enjoy competing and practicing to get better.
+	body := `I am Chris Delaney. I was born and raised in Frenchtown, Montana. I had an active childhood,
+			 playing soccer, baseball, basketball, and football. I practiced karated for about seven years
+			 before high school. I did some hunting, fishing, and boating. But when I went into 8th grade, 
+			 I became obsessed with golf. Over the next few years, I spent countless hours practicing and
+			 playing. It didn't much matter if it was hot as the dickens, pouring rain, or even snowing.
+			 There was golf to be played. I dreamed of becoming a professional golfer, and was willing to
+			 put in the work. It always felt like I wasn't getting out as much as I was putting in though.
+			 Nonetheless, I still have a few nice accomplishments under my belt, like taking 2nd in state
+			 in high school and getting my handicap down to 0. I did not play golf in college, though I 
+			 wanted to and did try. Now, I no longer have the burning desire to practice for hours every
+			 day to become pro, but I still love the game and look forward to competing in the future.
 
-			 My other main interest anymore is programming and computer science, which is kind of why I am
-			 here. I didn't know anything about computer science going in to freshman year in college, but 
-			 chose it as my major because I didn't know what else I would study and because I heard it was
-			 a good field to get into. I would describe my experience with computer science as I would my
-			 experience with coffee. At first, it was bitter, difficult to swallow, and not all that enjoyable.
-			 But life comes at you fast and classes get harder, so I started taking in more as a means of 
-			 performing better. Over time, my palette refined and I started to actually enjoy it. Nowadays,
-			 I wake up excited for it, and a day doesn't seem quite right without a healthy dosage.
+			 Nowadays I also enjoy working on coding projects, this website being one. It's hard to say I
+			 have a favorite area of computer science since I find so many areas fascinating. Machine
+			 learning, parallel computing, and math-heavy computing are particularly interesting to me, but 
+			 I am happy to learn anything new. My favorite programming language at the moment is Go. I like 
+			 learning lots of different languages though since they all seem to have unique properties
+			 that make them especially handy for making certain types of programs. 
 
+			 I recently graduated from Gonzaga University with a B.S. in computer science and am excited to
+			 start life as a software engineer. I hope to work on all sorts of projects so that I can have
+			 the chance to experience many different roles and learn a wide variety of skills. I think that
+			 would keep things interesting and allow me to discover what I truly enjoy the most.
+			 
 			 This is my basic description. But if you are itching for more, I have much more interesting things about me
 			 listed below.`
 	
@@ -271,7 +280,7 @@ func main() {
 	err = json.Unmarshal(f, &keys)
 
 	setupRoutes()
-	connDB(keys)
+	// connDB(keys)
 	initAzureDB(keys)
 
 	log.Println("Now server running on port 8080")
