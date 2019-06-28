@@ -7,10 +7,11 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Link from '@material-ui/core/Link';
-import Octicon, {MarkGithub} from '@primer/octicons-react';
+import Octicon, {MarkGithub, File} from '@primer/octicons-react';
 import Avatar from '@material-ui/core/Avatar';
 import mugshot from '../../images/mugshot.jpg';
 import linkedinLogo from '../../images/In-Blue-26@2x.png';
+import Resume from '../../files/ChrisDelaney_Resume.pdf';
 
 const styles = theme => ({
   root: {
@@ -66,14 +67,11 @@ const styles = theme => ({
       marginRight: '8px',
       verticalAlign: 'center',
       color: 'white',
+      marginTop: '5px'
   },
 });
 
 class Home extends Component {
-    constructor(props) {
-        super(props);
-    }
-    
     render() {
       const { classes } = this.props;   
       const facts = this.props.items.facts.map(fact =>
@@ -105,6 +103,10 @@ class Home extends Component {
                                         <Avatar className={classes.avatar} alt="in" src={linkedinLogo} inline="true" />
                                         {"https://linkedin.com/in/cadelaney3"}
                                     </Grid>
+                                    </Link>
+                                    <Link href={Resume} className={classes.link} target="_blank" rel="noopener">
+                                        <Octicon className={classes.octicon} icon={File} ariaLabel="File" noWrap />
+                                        {"My Resume"}
                                     </Link>
                             </Paper>
                         </Grid>
