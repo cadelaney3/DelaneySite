@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
+	"github.com/cadelaney3/delaneySite/pkg/db"
 	"github.com/gorilla/sessions"
 )
 
@@ -24,14 +25,6 @@ var (
 	store = sessions.NewCookieStore(key)
 
 )
-
-type postgresConn struct {
-	host string
-	port int 
-	user string
-	password string 
-	dbname string
-}
 
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home|signin)")
@@ -281,7 +274,7 @@ func main() {
 
 	setupRoutes()
 	// connDB(keys)
-	initAzureDB(keys)
+	db = db.initAzureDB(keys)
 
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
