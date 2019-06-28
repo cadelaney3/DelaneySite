@@ -72,17 +72,17 @@ export default function App() {
       <MuiThemeProvider theme={theme} >
         <Header theme={theme} />
         <Switch>
-          <Route expact path="/home" render={(props) => <HomePage {...props} loggedIn={loggedIn} /> } />
-          <Route path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
+          <Route exact path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
           <Route 
-            path="/signin" 
+            exact path="/signin" 
             render={(props) => <SignIn
               {...props}
-              loggedIn={loggedIn} //{this.state.loggedIn} 
-              handleSignIn={handleSignIn} //{this.handleSignIn}  
+              loggedIn={loggedIn} 
+              handleSignIn={handleSignIn}
               />            
             } 
           />
+          <Route expact path="/" render={(props) => <HomePage {...props} loggedIn={loggedIn} /> } />
         </Switch>
       </MuiThemeProvider>
     </Router>
