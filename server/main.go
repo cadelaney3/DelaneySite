@@ -18,7 +18,7 @@ import (
 )
 
 var keys = make(map[string]map[string]string)
-var db *sql.DB
+var azureDB *sql.DB
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 	key = []byte(os.Getenv("SESSION_KEY"))
@@ -274,7 +274,7 @@ func main() {
 
 	setupRoutes()
 	// connDB(keys)
-	db = db.initAzureDB(keys)
+	azureDB = db.InitAzureDB(keys)
 
 	log.Println("Now server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

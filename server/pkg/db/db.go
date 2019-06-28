@@ -8,7 +8,7 @@ import (
     "fmt"
 )
 
-type azureDBConn struct {
+type AzureDBConn struct {
 	server string
 	port int
 	user string
@@ -16,7 +16,7 @@ type azureDBConn struct {
 	database string
 }
 
-type postgresConn struct {
+type PostgresConn struct {
 	host string
 	port int 
 	user string
@@ -26,8 +26,8 @@ type postgresConn struct {
 
 // var azureDB *sql.DB
 
-func initAzureDB(keys map[string]map[string]string) *sql.DB {
-	conn := azureDBConn{
+func InitAzureDB(keys map[string]map[string]string) *sql.DB {
+	conn := AzureDBConn{
 		server: "delaneysite.database.windows.net",
 		port: 1433,
 		user: keys["AZURE_DB"]["USER"],
@@ -55,9 +55,9 @@ func initAzureDB(keys map[string]map[string]string) *sql.DB {
 	return azureDB
 }
 
-func connDB(keys map[string]map[string]string) {
+func InitPostgresDB(keys map[string]map[string]string) *sql.DB {
 
-	postgres := postgresConn{
+	postgres := PostgresConn{
 		host: "localhost",
 		port: 5432,
 		user: keys["POSTGRES"]["USER"],
@@ -69,8 +69,8 @@ func connDB(keys map[string]map[string]string) {
     "password=%s dbname=%s sslmode=disable",
 	postgres.host, postgres.port, postgres.user, postgres.password, postgres.dbname)
 
-	var err error
-	db, err = sql.Open("postgres", psqlInfo)
+	//var err error
+	db, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		panic(err)
@@ -81,4 +81,5 @@ func connDB(keys map[string]map[string]string) {
 	  panic(err)
 	} 
 	fmt.Println("Successfully connected!")
+	return db
 }
