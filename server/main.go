@@ -266,7 +266,7 @@ func secret(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	f, err := ioutil.ReadFile("../keys.json")
+	f, err := ioutil.ReadFile("./keys.json")
 	if err != nil {
 		panic(err)
 	}
