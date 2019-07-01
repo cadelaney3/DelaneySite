@@ -15,7 +15,46 @@ const theme = createMuiTheme({
     type: 'dark',
   }
 })
+/*
+class App extends Component {
+  constructor(props) {
+    super(props);
+  }
 
+  state = {
+    loggedIn: false,
+  }
+
+  handleSignIn() {
+    this.setState(prevState => ({ loggedIn: !prevState.loggedIn }));
+  }
+
+  render() {
+    const [signedIn, setSignedIn] = useState(false);
+
+    return (
+      <Router>
+        <MuiThemeProvider theme={theme} >
+          <Header theme={theme} />
+          <Switch>
+            <Route expact path="/home" render={(props) => <HomePage {...props} loggedIn={signedIn} /> } />
+            <Route path="/ws" render={(props) => <WS {...props} loggedIn={this.state.loggedIn} /> } />
+            <Route 
+              path="/signin" 
+              render={(props) => <SignIn
+                {...props}
+                loggedIn={signedIn} //{this.state.loggedIn} 
+                handleSignIn={setSignedIn} //{this.handleSignIn}  
+                />            
+              } 
+            />
+          </Switch>
+        </MuiThemeProvider>
+      </Router>
+    );
+  }
+}
+*/
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
 
@@ -33,17 +72,17 @@ export default function App() {
       <MuiThemeProvider theme={theme} >
         <Header theme={theme} />
         <Switch>
-          <Route expact path="/home" render={(props) => <HomePage {...props} loggedIn={loggedIn} /> } />
-          <Route path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
+          <Route exact path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
           <Route 
-            path="/signin" 
+            exact path="/signin" 
             render={(props) => <SignIn
               {...props}
-              loggedIn={loggedIn} //{this.state.loggedIn} 
-              handleSignIn={handleSignIn} //{this.handleSignIn}  
+              loggedIn={loggedIn} 
+              handleSignIn={handleSignIn}
               />            
             } 
           />
+          <Route expact path="/" render={(props) => <HomePage {...props} loggedIn={loggedIn} /> } />
         </Switch>
       </MuiThemeProvider>
     </Router>

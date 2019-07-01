@@ -1,3 +1,4 @@
-./app
-keys.json
+app
+server/keys.json
 client/src/images
+client/src/files
