@@ -11,6 +11,8 @@ import Octicon, {MarkGithub} from '@primer/octicons-react';
 import Avatar from '@material-ui/core/Avatar';
 import mugshot from '../../images/mugshot.jpg';
 import linkedinLogo from '../../images/In-Blue-26@2x.png';
+import Fab from '@material-ui/core/Fab';
+import AddIcon from '@material-ui/icons/Add';
 
 const styles = theme => ({
   root: {
@@ -67,12 +69,21 @@ const styles = theme => ({
       verticalAlign: 'center',
       color: 'white',
   },
+  fab: {
+      margin: theme.spacing(1),
+      position: 'fixed',
+  }
 });
 
 class Home extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            loggedIn: sessionStorage.getItem("loggedIn"),
+        }
     }
+
     
     render() {
       const { classes } = this.props;   
@@ -86,51 +97,54 @@ class Home extends Component {
         </ListItem>
       );
       return (
-            <Grid container className={classes.root} spacing={8}>
-                <Grid item xs={3}>
-                    <Grid container direction="column" spacing={8}>
-                        <Grid item>
-                            <ButtonBase className={classes.image}>
-                                <img className={classes.img} alt="Chris" src={mugshot} />
-                            </ButtonBase>
-                        </Grid>
-                        <Grid item>
-                            <Paper className={classes.firstColPaper} align='left'>
-                                    <Link href="https://github.com/cadelaney3/" className={classes.link} target="_blank" rel="noopener" >
-                                        <Octicon className={classes.octicon} icon={MarkGithub} ariaLabel="GitHub" noWrap />
-                                        {"https://github.com/cadelaney3"}
-                                    </Link>
-                                    <Link href="https://linked.com/in/cadelaney3/" className={classes.link} target="_blank" rel="noopener">
-                                    <Grid container alignItems="center">
-                                        <Avatar className={classes.avatar} alt="in" src={linkedinLogo} inline="true" />
-                                        {"https://linkedin.com/in/cadelaney3"}
-                                    </Grid>
-                                    </Link>
-                            </Paper>
-                        </Grid>
+        <Grid container className={classes.root} spacing={8}>
+            <Grid item xs={3}>
+                <Grid container direction="column" spacing={8}>
+                    <Grid item>
+                        <ButtonBase className={classes.image}>
+                            <img className={classes.img} alt="Chris" src={mugshot} />
+                        </ButtonBase>
                     </Grid>
-                </Grid>
-                <Grid item xs={12} sm container>
-                    <Grid item xs container direction="column" spacing={8}>
-                        <Typography className={classes.typography} variant="h2" align="left">
-                            Bio
-                        </Typography>
-                        <List>
-                            <ListItem key={this.props.items.body}>
-                                <Typography className={classes.body} variant="body1" align="left">
-                                    {this.props.items.body}
-                                </Typography>
-                            </ListItem>
-                        </List>
-                        <Typography className={classes.typography} variant="h2" align="left">
-                            Fun Facts
-                        </Typography>
-                        <List>
-                            {facts}
-                        </List>                      
+                    <Grid item>
+                        <Paper className={classes.firstColPaper} align='left'>
+                                <Link href="https://github.com/cadelaney3/" className={classes.link} target="_blank" rel="noopener" >
+                                    <Octicon className={classes.octicon} icon={MarkGithub} ariaLabel="GitHub" noWrap />
+                                    {"https://github.com/cadelaney3"}
+                                </Link>
+                                <Link href="https://linked.com/in/cadelaney3/" className={classes.link} target="_blank" rel="noopener">
+                                <Grid container alignItems="center">
+                                    <Avatar className={classes.avatar} alt="in" src={linkedinLogo} inline="true" />
+                                    {"https://linkedin.com/in/cadelaney3"}
+                                </Grid>
+                                </Link>
+                        </Paper>
                     </Grid>
                 </Grid>
             </Grid>
+            <Grid item xs={12} sm container>
+                <Grid item xs container direction="column" spacing={8}>
+                    <Typography className={classes.typography} variant="h2" align="left">
+                        Bio
+                    </Typography>
+                    <List>
+                        <ListItem key={this.props.items.body}>
+                            <Typography className={classes.body} variant="body1" align="left">
+                                {this.props.items.body}
+                            </Typography>
+                        </ListItem>
+                    </List>
+                    <Typography className={classes.typography} variant="h2" align="left">
+                        Fun Facts
+                    </Typography>
+                    <List>
+                        {facts}
+                    </List>                      
+                </Grid>
+            </Grid>
+            <Fab aria-label="Add" className={classes.fab}>
+                <AddIcon />
+            </Fab>
+        </Grid>
       );
     }
 }
