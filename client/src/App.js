@@ -70,7 +70,7 @@ export default function App() {
   return (
     <Router>
       <MuiThemeProvider theme={theme} >
-        <Header theme={theme} />
+        <Header theme={theme} loggedIn={loggedIn} />
         <Switch>
           <Route exact path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
           <Route 
