@@ -74,6 +74,10 @@ const styles = theme => ({
   fab: {
       margin: theme.spacing(1),
       position: 'fixed',
+      top: 'auto',
+      bottom: 20,
+      right: 20,
+      left: 'auto',
   }
 });
 
@@ -124,20 +128,6 @@ class Home extends Component {
                                 </Link>
                         </Paper>
                     </Grid>
-                </Grid>
-                <Grid item>
-                    <Paper className={classes.firstColPaper} align='left'>
-                            <Link href="https://github.com/cadelaney3/" className={classes.link} target="_blank" rel="noopener" >
-                                <Octicon className={classes.octicon} icon={MarkGithub} ariaLabel="GitHub" noWrap />
-                                {"https://github.com/cadelaney3"}
-                            </Link>
-                            <Link href="https://linked.com/in/cadelaney3/" className={classes.link} target="_blank" rel="noopener">
-                            <Grid container alignItems="center">
-                                <Avatar className={classes.avatar} alt="in" src={linkedinLogo} inline="true" />
-                                {"https://linkedin.com/in/cadelaney3"}
-                            </Grid>
-                            </Link>
-                    </Paper>
                 </Grid>
             </Grid>
             <Grid item xs={12} sm container>
