@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { withRouter } from 'react-router';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
@@ -10,7 +10,6 @@ import Badge from '@material-ui/core/Badge';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import { fade } from '@material-ui/core/styles/colorManipulator';
-import { withStyles } from '@material-ui/core/styles';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MailIcon from '@material-ui/icons/Mail';
@@ -108,6 +107,10 @@ const useStyles = makeStyles(theme => ({
   hide: {
     display: 'none',
   },
+  link: {
+    textDecoration: 'none',
+    color: '#ffd600',
+  },
 }));
 
 export default withRouter(function Header(props) {
@@ -152,7 +155,6 @@ export default withRouter(function Header(props) {
       transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       open={isMenuOpen}
       onClose={handleMenuClose}
-      onClick={handleMenuClick}
     >
       <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
@@ -215,15 +217,21 @@ export default withRouter(function Header(props) {
               }}
             />
           </div>
+          <NavLink to="/" activeClassName={classes.link}>
           <Typography className={classes.pageLink} variant="h6" noWrap>
             About
           </Typography>
+          </NavLink>
+          <NavLink to="/" activeClassName={classes.link}>
           <Typography className={classes.pageLink} variant="h6" noWrap>
             Tutorials
           </Typography>
+          </NavLink>
+          <NavLink to="/" activeClassName={classes.link}>
           <Typography className={classes.pageLink} variant="h6" noWrap>
             Projects
           </Typography>
+          </NavLink>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
             <IconButton
