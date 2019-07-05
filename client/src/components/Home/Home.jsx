@@ -14,6 +14,7 @@ import linkedinLogo from '../../images/In-Blue-26@2x.png';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import Resume from '../../files/ChrisDelaney_Resume.pdf';
+import AddFact from '../AddFact/AddFact';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -86,6 +87,8 @@ export default function About(props) {
     const [error, setError] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
     const [items, setItems] = useState([]);
+    const [newFact, setNewFact] = useState(false);
+
 
     const getResults = () => {
         //fetch("http://localhost:8080/home")
@@ -103,7 +106,7 @@ export default function About(props) {
 
     useEffect(() => {
         getResults();
-    }, []);
+    }, [newFact]);
 
     const [facts, setFacts] = useState([]);
 
@@ -173,11 +176,6 @@ export default function About(props) {
                         </List>                      
                     </Grid>
                 </Grid>
-                {(sessionStorage.getItem("loggedIn") === "false") &&
-                    <Fab aria-label="Add" className={classes.fab}>
-                        <AddIcon />
-                    </Fab>
-                }
             </Grid>  
         );
     }, [facts])
@@ -188,7 +186,15 @@ export default function About(props) {
         return <div>Loading...</div>;
     } else {
         return (
-            about            
+            <div>
+                {about}
+                {(props.loggedIn) &&
+                    <AddFact newFact={newFact} setNewFact={setNewFact} />
+                    // <Fab aria-label="Add" className={classes.fab}>
+                    //     <AddIcon />
+                    // </Fab>
+                } 
+            </div>
         );
     }
 }
