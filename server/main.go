@@ -29,6 +29,8 @@ var (
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home|signin)")
 
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
 type Credentials struct {
 	Username string `json:"username", db:"username"`
 	Password string `json:"password", db:"password"`
@@ -50,6 +52,10 @@ type response struct {
 	Message string `json:"message"`
 }
 
+type fact struct {
+	Fact string `json:"fact"`
+}
+
 // define our WebSocket endpoint
 func serveWs(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
 	fmt.Println("WebSocket Endpoint Hit")
@@ -68,6 +74,9 @@ func serveWs(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
+
+	var factList []string
+
 	body := `I am Chris Delaney. I was born and raised in Frenchtown, Montana. I had an active childhood,
 			 playing soccer, baseball, basketball, and football. I practiced karated for about seven years
 			 before high school. I did some hunting, fishing, and boating. But when I went into 8th grade, 
@@ -94,7 +103,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			 
 			 This is my basic description. But if you are itching for more, I have much more interesting things about me
 			 listed below.`
-	
+/*	
 	facts := []string{`I made up the name "CDSwaggy" back when "swag" was starting to become overused and kinda dumb.
 					   I used it joking for usernames, and it got good reactions from people I knew.
 					   Because of that and because it was easy to remember, I started using it for basically everything.
@@ -110,10 +119,28 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 					   `I love love love spicy food. It has to be tasty spicy though. So Tapatio is my go-to choice, but if
 					   I'm sweatin' form some extra spicy Tai food, those are tears of joy that I am crying.`,
 					   `More facts and tidbits to come as I think of them.`}
+*/
+	rows, err := azureDB.Query("select fact from facts")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var f string
+		err = rows.Scan(&f)
+		if err != nil {
+			panic(err)
+		}
+		factList = append(factList, f)
+	}
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
 	
 	res := homeResponse{
 		Body: body,
-		Facts: facts,
+		Facts: factList,
 	}
 	resB, err := json.Marshal(res)
 	if err != nil {
@@ -123,6 +150,45 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Write(resB)
+}
+
+func addFact(w http.ResponseWriter, r *http.Request) {
+
+	incomingFact := fact{}
+
+	err := json.NewDecoder(r.Body).Decode(&incomingFact)
+	if err != nil {
+		log.Println(err)		
+	}
+
+	if incomingFact != (fact{}) {
+		log.Println(incomingFact.Fact)
+		statement := "insert into facts(fact) values (@fact)"
+		_, err = azureDB.Exec(statement, sql.Named("fact", incomingFact.Fact))
+		if err != nil {
+			respo := response{
+				Status: 500,
+				Message: "Internal server error",
+			}
+			resp, _ := json.Marshal(respo)
+			w.Write(resp)
+			panic(err)
+			return
+		}
+		respo := response{
+			Status: 200,
+			Message: "Successful entry",
+		}
+		resp, _ := json.Marshal(respo)
+		w.Write(resp)
+		return
+	}
+	respo := response{
+		Status: 401,
+		Message: "Invalid entry",
+	}
+	resp, _ := json.Marshal(respo)
+	w.Write(resp)
 }
 
 func signIn(w http.ResponseWriter, r *http.Request) {
@@ -214,13 +280,20 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-func signInHandler(fn func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		fn(w, r)
+func methodHandler(method string) Middleware {
+	return func(fn http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			log.Println(r.Method)
+			// if r.Method != method {
+			// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			// 	return
+			// }
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST")
+			fn(w, r)
+		}
 	}
 }
 
@@ -247,8 +320,9 @@ func setupRoutes() {
 		serveWs(pool, w, r)
 	})
 	http.HandleFunc("/view/", makeHandler(handler))
-	http.HandleFunc("/home", makeHandler(homeHandler))
-	http.HandleFunc("/signin", signInHandler(signIn))
+	http.HandleFunc("/home", homeHandler)
+	http.HandleFunc("/signin", Chain(signIn, methodHandler("POST")))
+	http.HandleFunc("/addFact", Chain(addFact, methodHandler("POST")))
 }
 
 func secret(w http.ResponseWriter, r *http.Request) {
@@ -262,6 +336,35 @@ func secret(w http.ResponseWriter, r *http.Request) {
 
 	// Print secret message
 	fmt.Fprintln(w, "The cake is a lie!")
+}
+
+// Method ensures that url can only be requested with a specific method, else returns a 400 Bad Request
+func Method(m string) Middleware {
+
+	// Create a new Middleware
+	return func(f http.HandlerFunc) http.HandlerFunc {
+
+		// Define the http.HandlerFunc
+		return func(w http.ResponseWriter, r *http.Request) {
+
+			// Do middleware things
+			if r.Method != m {
+				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+				return
+			}
+
+			// Call the next middleware/handler in chain
+			f(w, r)
+		}
+	}
+}
+
+// Chain applies middlewares to a http.HandlerFunc
+func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
+	for _, m := range middlewares {
+		f = m(f)
+	}
+	return f
 }
 
 func main() {
