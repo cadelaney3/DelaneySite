@@ -23,14 +23,14 @@ export default function App() {
     sessionStorage.setItem('loggedIn', loggedIn);
   });
 
-  const handleSignIn = () => {
+  const handleSignInChange = () => {
     setLoggedIn(!loggedIn);
   }
 
   return (
     <Router>
       <MuiThemeProvider theme={theme} >
-        <Header theme={theme} loggedIn={loggedIn} />
+        <Header theme={theme} loggedIn={loggedIn} handleSignInChange={handleSignInChange} />
         <Switch>
           <Route exact path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
           <Route 
@@ -38,11 +38,17 @@ export default function App() {
             render={(props) => <SignIn
               {...props}
               loggedIn={loggedIn} 
-              handleSignIn={handleSignIn}
+              handleSignInChange={handleSignInChange}
               />            
             } 
           />
-          <Route expact path="/" render={(props) => <HomePage {...props} loggedIn={loggedIn} /> } />
+          <Route expact path="/" 
+            render={(props) => <Home 
+              {...props} 
+              loggedIn={loggedIn} 
+              />
+            }
+          />
         </Switch>
       </MuiThemeProvider>
     </Router>
