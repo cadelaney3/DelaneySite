@@ -17,7 +17,7 @@ import lakecomo from '../../images/lakecomo.jpg';
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Credentials": true,
-  Accept: "application/json"
+  Accept: "text/plain"
 };
 
 function MadeWithLove() {
@@ -93,7 +93,7 @@ export default function SignIn(props) {
       .then(results => results.json())
       .then(data => {
         if (data.status === 200) {
-          props.handleSignIn();
+          props.handleSignInChange();
           props.history.push("/home");
         } else {
           setErrorMessage(data.message);

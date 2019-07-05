@@ -131,6 +131,12 @@ export default withRouter(function Header(props) {
     }
   }
 
+  const handleSignOut = () => {
+    sessionStorage.setItem("loggedIn", false)
+    props.handleSignInChange();
+    handleMenuClose();
+  }
+
   const handleProfileMenuOpen = event => {
     setAnchorEl(event.currentTarget);
   };
@@ -156,8 +162,8 @@ export default withRouter(function Header(props) {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleSignOut}>Sign out</MenuItem>
     </Menu>
   );
 
@@ -169,22 +175,7 @@ export default withRouter(function Header(props) {
       open={isMobileMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMobileMenuClose}>
-        <IconButton color="inherit">
-          <Badge badgeContent={4} color="secondary">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <p>Messages</p>
-      </MenuItem>
-      <MenuItem onClick={handleMobileMenuClose}>
-        <IconButton color="inherit">
-          <Badge badgeContent={11} color="secondary">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-        <p>Notifications</p>
-      </MenuItem>
+      <MenuItem onClick={handleMobileMenuClose} />
       <MenuItem onClick={handleProfileMenuOpen}>
         <IconButton color="inherit">
           <AccountCircle />
