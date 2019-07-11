@@ -21,6 +21,7 @@ import { makeStyles } from '@material-ui/core/styles';
 const useStyles = makeStyles(theme => ({
   root: {
     width: '100%',
+    display: 'flex'
   },
   grow: {
     flexGrow: 1,
@@ -101,6 +102,7 @@ const useStyles = makeStyles(theme => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
+    zIndex: theme.zIndex.drawer + 1,
     color: "#ffd600",
     background: fade(theme.palette.common.black, 0.25),
   },
@@ -186,7 +188,7 @@ export default withRouter(function Header(props) {
   );
 
   return (
-    <div>
+    <div className={classes.root}>
       <CssBaseline />
       <AppBar 
         position="static"
@@ -213,9 +215,9 @@ export default withRouter(function Header(props) {
             About
           </Typography>
           </NavLink>
-          <NavLink to="/" activeClassName={classes.link}>
+          <NavLink to="/articles" activeClassName={classes.link}>
           <Typography className={classes.pageLink} variant="h6" noWrap>
-            Tutorials
+            Articles
           </Typography>
           </NavLink>
           <NavLink to="/" activeClassName={classes.link}>
