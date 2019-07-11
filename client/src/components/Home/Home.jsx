@@ -11,8 +11,6 @@ import Octicon, {MarkGithub, File} from '@primer/octicons-react';
 import Avatar from '@material-ui/core/Avatar';
 import mugshot from '../../images/mugshot.jpg';
 import linkedinLogo from '../../images/In-Blue-26@2x.png';
-import Fab from '@material-ui/core/Fab';
-import AddIcon from '@material-ui/icons/Add';
 import Resume from '../../files/ChrisDelaney_Resume.pdf';
 import AddFact from '../AddFact/AddFact';
 
@@ -92,7 +90,7 @@ export default function About(props) {
 
     const getResults = () => {
         //fetch("http://localhost:8080/home")
-        fetch("http://172.17.21.104:8080/home")
+        fetch("http://172.17.251.115:8080/home")
         .then(res => res.json())
         .then(result => {
             setItems(result);
@@ -190,9 +188,6 @@ export default function About(props) {
                 {about}
                 {(props.loggedIn) &&
                     <AddFact newFact={newFact} setNewFact={setNewFact} />
-                    // <Fab aria-label="Add" className={classes.fab}>
-                    //     <AddIcon />
-                    // </Fab>
                 } 
             </div>
         );
