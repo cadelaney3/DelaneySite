@@ -6,6 +6,7 @@ import ChatHistory from './components/ChatHistory/ChatHistory';
 import ChatInput from './components/ChatInput/ChatInput';
 import Home from './components/Home/Home';
 import SignIn from './components/SignIn/SignIn';
+import Articles from './components/Articles/Articles';
 import { connect, sendMsg } from "./api";
 import { createMuiTheme } from '@material-ui/core/styles';
 import { MuiThemeProvider } from '@material-ui/core/styles';
@@ -34,6 +35,14 @@ export default function App() {
         <Switch>
           <Route exact path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
           <Route 
+            exact path="/articles" 
+            render={(props) => <Articles
+              {...props}
+              loggedIn={loggedIn}
+              />
+            }
+          />
+          <Route 
             exact path="/signin" 
             render={(props) => <SignIn
               {...props}
@@ -42,7 +51,8 @@ export default function App() {
               />            
             } 
           />
-          <Route expact path="/" 
+          <Route 
+            expact path="/" 
             render={(props) => <Home 
               {...props} 
               loggedIn={loggedIn} 
