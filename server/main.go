@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"golang.org/x/crypto/bcrypt"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
@@ -37,7 +38,7 @@ type Credentials struct {
 	Email string `json:"email", db:"email"`
 }
 
-type homeResponse struct {
+type aboutResponse struct {
 	Body string `json:"body"`
 	Facts []string `json:"facts"`
 }
@@ -54,6 +55,20 @@ type response struct {
 
 type fact struct {
 	Fact string `json:"fact"`
+}
+
+type article struct {
+	Title string `json:"title"`
+	Author string `json:"author"`
+	Category string `json:"category"`
+	Topic string `json:"topic"`
+	Description string `json:"description"`
+	Content string `json:"content"`
+	Date time.Time `json:"date"`
+}
+
+type articleResponse struct {
+	Articles []article `json:"article"`
 }
 
 // define our WebSocket endpoint
@@ -73,7 +88,7 @@ func serveWs(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
 	client.Read()
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+func about(w http.ResponseWriter, r *http.Request) {
 
 	var factList []string
 
@@ -103,23 +118,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			 
 			 This is my basic description. But if you are itching for more, I have much more interesting things about me
 			 listed below.`
-/*	
-	facts := []string{`I made up the name "CDSwaggy" back when "swag" was starting to become overused and kinda dumb.
-					   I used it joking for usernames, and it got good reactions from people I knew.
-					   Because of that and because it was easy to remember, I started using it for basically everything.
-					   I am not particularly swaggy at all, which kind of adds to the joke. So that's that story.`,
-					  `I've been to a rodeo where I caught a chicken and got to keep it 
-					  (I named it Curly, since I packed it home in a curly fry box)`,
-					  "I have helped my grandpa give shots to cows.",
-					  `My lowest score in golf was a 65 (-5) at King Ranch Golf Course, the course I grew up on.
-					   The score I most proud of was a 69 (-3) at Stock Farm Golf Club, where I used to work. I
-					   should have shot a 75 or so, but I putted out of mind that round.`,
-					   `I did karate for about 7 years and was a belt and a stripe from black belt. I recently watched
-					   a few kung-fu movies with Bruce Lee and Jackie Chan, which has really got the kung-fu juices flowing.`,
-					   `I love love love spicy food. It has to be tasty spicy though. So Tapatio is my go-to choice, but if
-					   I'm sweatin' form some extra spicy Tai food, those are tears of joy that I am crying.`,
-					   `More facts and tidbits to come as I think of them.`}
-*/
+
 	rows, err := azureDB.Query("select fact from facts")
 	if err != nil {
 		panic(err)
@@ -138,9 +137,44 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	
-	res := homeResponse{
+	res := aboutResponse{
 		Body: body,
 		Facts: factList,
+	}
+	resB, err := json.Marshal(res)
+	if err != nil {
+		fmt.Fprintf(w, "Error: %s", err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Write(resB)
+}
+
+func articles(w http.ResponseWriter, r *http.Request) {
+	var articleList []article
+
+	rows, err := azureDB.Query("select title, author, category, topic, description, article_content, date_created from articles")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var art article
+		err = rows.Scan(&art.Title, &art.Author, &art.Category, &art.Topic, &art.Description, &art.Content, &art.Date)
+		if err != nil {
+			panic(err)
+		}
+		articleList = append(articleList, art)
+	}
+	log.Println(articleList)
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	res := articleResponse{
+		Articles: articleList,
 	}
 	resB, err := json.Marshal(res)
 	if err != nil {
@@ -320,9 +354,10 @@ func setupRoutes() {
 		serveWs(pool, w, r)
 	})
 	http.HandleFunc("/view/", makeHandler(handler))
-	http.HandleFunc("/home", homeHandler)
+	http.HandleFunc("/about", about)
 	http.HandleFunc("/signin", Chain(signIn, methodHandler("POST")))
 	http.HandleFunc("/addFact", Chain(addFact, methodHandler("POST")))
+	http.HandleFunc("/articles", articles)
 }
 
 func secret(w http.ResponseWriter, r *http.Request) {
