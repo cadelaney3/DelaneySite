@@ -65,6 +65,7 @@ export default function App() {
   );
 }
 
+/*
 class HomePage extends Component {
   constructor(props) {
     super(props);
@@ -114,6 +115,7 @@ class HomePage extends Component {
   }
 
 }
+*/
 
 class WS extends Component {
   constructor(props) {
