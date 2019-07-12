@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -35,11 +36,15 @@ const useStyles = makeStyles(theme => ({
     width: drawerWidth,
   },
   content: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
     flexGrow: 1,
     padding: theme.spacing(3),
   },
   card: {
-    width: '50%',
+    width: 450,
+    //margin: theme.spacing(1)
   },
   toolbar: theme.mixins.toolbar,
 }));
@@ -58,7 +63,9 @@ function ImgMediaCard() {
     .then(res => res.json())
     .then(result => {
         setArticles(result);
-        setIsLoaded(true);
+        if(articles !== []) {
+          setIsLoaded(true);
+        }
     })
     .catch(error => {
         setIsLoaded(true);
@@ -81,7 +88,7 @@ function ImgMediaCard() {
                 {item.title}
               </Typography>
               <Typography variant="body2" color="textSecondary" component="p">
-                {item.content}
+                {item.description}
               </Typography>
             </CardContent>
           </CardActionArea>
@@ -95,6 +102,12 @@ function ImgMediaCard() {
           </CardActions>
         </Card>
       ));
+    } else {
+      setFeed(
+        <div>
+          Loading...
+        </div>
+      )
     }
   }, [isLoaded]);
 
@@ -171,7 +184,7 @@ export default function ClippedDrawer() {
         </List>
       </Drawer>
       <main className={classes.content}>
-        <div className={classes.toolbar}/>
+        {/* <div className={classes.toolbar}/> */}
           {ImgMediaCard()}
       </main>
     </div>
