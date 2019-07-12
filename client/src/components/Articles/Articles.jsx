@@ -1,9 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
-import AppBar from '@material-ui/core/AppBar';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
@@ -12,6 +10,13 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
+import Card from '@material-ui/core/Card';
+import CardActionArea from '@material-ui/core/CardActionArea';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import CardMedia from '@material-ui/core/CardMedia';
+import Button from '@material-ui/core/Button';
+import lakecomo from '../../images/lakecomo.jpg';
 
 const drawerWidth = 240;
 
@@ -33,14 +38,104 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     padding: theme.spacing(3),
   },
+  card: {
+    width: '50%',
+  },
   toolbar: theme.mixins.toolbar,
 }));
+
+function ImgMediaCard() {
+  const classes = useStyles();
+  const [error, setError] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [articles, setArticles] = useState([]);
+  const [newArticle, setNewArticle] = useState(false);
+  const [feed, setFeed] = useState([]);
+
+  const getResults = () => {
+    //fetch("http://localhost:8080/home")
+    fetch("http://172.17.251.115:8080/articles")
+    .then(res => res.json())
+    .then(result => {
+        setArticles(result);
+        setIsLoaded(true);
+    })
+    .catch(error => {
+        setIsLoaded(true);
+        setError(error);
+    })
+  };
+
+  useEffect(() => {
+    getResults();
+  }, [newArticle]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      console.log(articles);
+      setFeed(articles.article.map(item =>
+        <Card className={classes.card} key={item.title}>
+          <CardActionArea>
+            <CardContent align="left">
+              <Typography gutterBottom variant="h5" component="h2">
+                {item.title}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p">
+                {item.content}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+          <CardActions>
+            <Button size="small" color="primary">
+              Share
+            </Button>
+            <Button size="small" color="primary">
+              Learn More
+            </Button>
+          </CardActions>
+        </Card>
+      ));
+    }
+  }, [isLoaded]);
+
+  return (
+    feed
+    // <Card className={classes.card}>
+    //   <CardActionArea>
+    //     <CardMedia
+    //       component="img"
+    //       alt="Contemplative Reptile"
+    //       height="140"
+    //       image={lakecomo}
+    //       title="Contemplative Reptile"
+    //     />
+    //     <CardContent align="left">
+    //       <Typography gutterBottom variant="h5" component="h2">
+    //         Lizard
+    //       </Typography>
+    //       <Typography variant="body2" color="textSecondary" component="p">
+    //         Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
+    //         across all continents except Antarctica
+    //       </Typography>
+    //     </CardContent>
+    //   </CardActionArea>
+    //   <CardActions>
+    //     <Button size="small" color="primary">
+    //       Share
+    //     </Button>
+    //     <Button size="small" color="primary">
+    //       Learn More
+    //     </Button>
+    //   </CardActions>
+    // </Card>
+  );
+}
 
 export default function ClippedDrawer() {
   const classes = useStyles();
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} align='center'>
       {/* <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
@@ -76,30 +171,8 @@ export default function ClippedDrawer() {
         </List>
       </Drawer>
       <main className={classes.content}>
-        <div className={classes.toolbar} />
-        <Typography paragraph>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-          ut labore et dolore magna aliqua. Rhoncus dolor purus non enim praesent elementum
-          facilisis leo vel. Risus at ultrices mi tempus imperdiet. Semper risus in hendrerit
-          gravida rutrum quisque non tellus. Convallis convallis tellus id interdum velit laoreet id
-          donec ultrices. Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-          adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra nibh cras.
-          Metus vulputate eu scelerisque felis imperdiet proin fermentum leo. Mauris commodo quis
-          imperdiet massa tincidunt. Cras tincidunt lobortis feugiat vivamus at augue. At augue eget
-          arcu dictum varius duis at consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem
-          donec massa sapien faucibus et molestie ac.
-        </Typography>
-        <Typography paragraph>
-          Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper eget nulla
-          facilisi etiam dignissim diam. Pulvinar elementum integer enim neque volutpat ac
-          tincidunt. Ornare suspendisse sed nisi lacus sed viverra tellus. Purus sit amet volutpat
-          consequat mauris. Elementum eu facilisis sed odio morbi. Euismod lacinia at quis risus sed
-          vulputate odio. Morbi tincidunt ornare massa eget egestas purus viverra accumsan in. In
-          hendrerit gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem et
-          tortor. Habitant morbi tristique senectus et. Adipiscing elit duis tristique sollicitudin
-          nibh sit. Ornare aenean euismod elementum nisi quis eleifend. Commodo viverra maecenas
-          accumsan lacus vel facilisis. Nulla posuere sollicitudin aliquam ultrices sagittis orci a.
-        </Typography>
+        <div className={classes.toolbar}/>
+          {ImgMediaCard()}
       </main>
     </div>
   );
