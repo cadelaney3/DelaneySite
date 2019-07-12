@@ -7,6 +7,7 @@
     "@material-ui/icons": "^3.0.2",
     "@material-ui/styles": "^4.0.0-rc.0",
     "@primer/octicons-react": "^9.0.0",
+    "clsx": "^1.0.4",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.1",
