@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"time"
+	"html"
 
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
@@ -154,7 +155,17 @@ func about(w http.ResponseWriter, r *http.Request) {
 func articles(w http.ResponseWriter, r *http.Request) {
 	var articleList []article
 
-	rows, err := azureDB.Query("select title, author, category, topic, description, article_content, date_created from articles")
+	u := html.EscapeString(r.URL.Path)
+	log.Println(u)
+	
+	cat := html.EscapeString(r.URL.Query().Get("cat"))
+
+	sqlStmt := "select title, author, category, topic, description, article_content, date_created from articles"
+
+	if cat != "" {
+		sqlStmt += " where category = " + "'" + cat + "'"
+	}
+	rows, err := azureDB.Query(sqlStmt)
 	if err != nil {
 		panic(err)
 	}
@@ -180,6 +191,9 @@ func articles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "Error: %s", err)
 	}
+
+	log.Println(articleList)
+	
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -396,7 +410,7 @@ func setupRoutes() {
 	http.HandleFunc("/about", about)
 	http.HandleFunc("/signin", Chain(signIn, methodHandler("POST")))
 	http.HandleFunc("/addFact", Chain(addFact, methodHandler("POST")))
-	http.HandleFunc("/articles", articles)
+	http.HandleFunc("/articles", Chain(articles, methodHandler("GET")))
 	http.HandleFunc("/addArticle", Chain(addArticle, methodHandler("POST")))
 }
 

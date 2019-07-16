@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-// import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
-// import CssBaseline from '@material-ui/core/CssBaseline';
 import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
+import DirectionsRunIcon from '@material-ui/icons/DirectionsRun';
+import TimerIcon from '@material-ui/icons/Timer';
+import DevicesIcon from '@material-ui/icons/Devices';
+import FitnessIcon from '@material-ui/icons/FitnessCenter';
+import Octicon, {Beaker} from '@primer/octicons-react';
 import Card from '@material-ui/core/Card';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
-// import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
 import AddArticle from '../AddArticle/AddArticle';
 
@@ -46,86 +45,12 @@ const useStyles = makeStyles(theme => ({
     width: 450,
     margin: theme.spacing(1)
   },
+  octicon: {
+    height: '24px',
+    width: '24px',
+  },
   toolbar: theme.mixins.toolbar,
 }));
-
-function ArticleCards(props) {
-  const classes = useStyles();
-  const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [articles, setArticles] = useState([]);
-
-  const getResults = () => {
-    //fetch("http://localhost:8080/home")
-    fetch("http://172.26.34.14:8080/articles")
-    .then(res => res.json())
-    .then(result => {
-        setArticles(result);
-        if(articles !== []) {
-          setIsLoaded(true);
-        }
-    })
-    .catch(error => {
-        setIsLoaded(true);
-        setError(error);
-    })
-  };
-
-  useEffect(() => {
-    getResults();
-  }); //, [newArticle]);
-
-  useEffect(() => {
-    if (articles.article) {
-      console.log(articles);
-      props.setFeed(articles.article.map(item =>
-        <Card className={classes.card} key={item.title}>
-          <CardActionArea>
-            <CardContent align="left">
-              <Typography gutterBottom variant="h5" component="h2">
-                {item.title}
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p">
-                {item.description}
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-          <CardActions>
-            <Button size="small" color="primary">
-              Share
-            </Button>
-            <Button size="small" color="primary">
-              Learn More
-            </Button>
-          </CardActions>
-        </Card>
-      ));
-    } else {
-      props.setFeed(
-        <div>
-          Loading...
-        </div>
-      )
-    }
-  }, [isLoaded]);
-
-  //return (
-  if (error) {
-    return (
-      <div>
-        Error: {error.message}
-      </div>
-    );
-  } else if (!isLoaded) {
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-  } else {
-    return props.feed
-  }
-}
 
 export default function Articles(props) {
   const classes = useStyles();
@@ -134,6 +59,25 @@ export default function Articles(props) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [articles, setArticles] = useState([]);
   const [feed, setFeed] = useState(null);
+  const [filter, setFilter] = useState(null);
+
+  const categories = ['Latest', 'Science', 'Technology', 'Sports', 'Health']
+  const icons = [<TimerIcon />, <Octicon icon={Beaker} className={classes.octicon} />, <DevicesIcon />, <DirectionsRunIcon />, <FitnessIcon />]
+
+  const handleFilter = text => () => {
+    console.log(text);
+    setFilter(text);
+    fetch("http://172.26.34.14:8080/articles?cat=" + text.toLowerCase())
+    .then(res => res.json())
+    .then(result => {
+      setArticles(result);
+      setIsLoaded(true);
+    })
+    .catch(error => {
+      setIsLoaded(true);
+      setError(error);
+    })
+  }
 
   const getResults = () => {
     //fetch("http://localhost:8080/home")
@@ -141,9 +85,7 @@ export default function Articles(props) {
     .then(res => res.json())
     .then(result => {
         setArticles(result);
-       // if( {articles} !== []) {
         setIsLoaded(true);
-       // }
     })
     .catch(error => {
         setIsLoaded(true);
@@ -180,8 +122,12 @@ export default function Articles(props) {
           </CardActions>
         </Card>
       ));
-    }    
-  }, [articles]);
+    } else {
+      setFeed(
+        <div></div>
+      )
+    }
+  }, [articles, filter]);
 
   var page =
     <div className={classes.root} align='center'>
@@ -194,18 +140,11 @@ export default function Articles(props) {
       >
         <div className={classes.toolbar} />
         <List>
-          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          {['All mail', 'Trash', 'Spam'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+          {categories.map((text, index) => (
+            <ListItem button key={text} onClick={handleFilter(text)}>
+              <ListItemIcon>
+                {icons[index]}
+              </ListItemIcon>
               <ListItemText primary={text} />
             </ListItem>
           ))}
