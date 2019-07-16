@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import clsx from 'clsx';
+// import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
-import CssBaseline from '@material-ui/core/CssBaseline';
+// import CssBaseline from '@material-ui/core/CssBaseline';
 import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
@@ -15,9 +15,9 @@ import Card from '@material-ui/core/Card';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
-import CardMedia from '@material-ui/core/CardMedia';
+// import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
-import lakecomo from '../../images/lakecomo.jpg';
+import AddArticle from '../AddArticle/AddArticle';
 
 const drawerWidth = 240;
 
@@ -49,17 +49,17 @@ const useStyles = makeStyles(theme => ({
   toolbar: theme.mixins.toolbar,
 }));
 
-function ImgMediaCard() {
+function ArticleCards(isNewArticle) {
   const classes = useStyles();
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [articles, setArticles] = useState([]);
-  const [newArticle, setNewArticle] = useState(false);
+  // const [newArticle, setNewArticle] = useState(isNewArticle);
   const [feed, setFeed] = useState([]);
 
   const getResults = () => {
     //fetch("http://localhost:8080/home")
-    fetch("http://172.17.251.115:8080/articles")
+    fetch("http://172.26.34.14:8080/articles")
     .then(res => res.json())
     .then(result => {
         setArticles(result);
@@ -75,10 +75,10 @@ function ImgMediaCard() {
 
   useEffect(() => {
     getResults();
-  }, [newArticle]);
+  }, [isNewArticle]);
 
   useEffect(() => {
-    if (isLoaded) {
+    if (articles.article) {
       console.log(articles);
       setFeed(articles.article.map(item =>
         <Card className={classes.card} key={item.title}>
@@ -111,52 +111,31 @@ function ImgMediaCard() {
     }
   }, [isLoaded]);
 
-  return (
-    feed
-    // <Card className={classes.card}>
-    //   <CardActionArea>
-    //     <CardMedia
-    //       component="img"
-    //       alt="Contemplative Reptile"
-    //       height="140"
-    //       image={lakecomo}
-    //       title="Contemplative Reptile"
-    //     />
-    //     <CardContent align="left">
-    //       <Typography gutterBottom variant="h5" component="h2">
-    //         Lizard
-    //       </Typography>
-    //       <Typography variant="body2" color="textSecondary" component="p">
-    //         Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-    //         across all continents except Antarctica
-    //       </Typography>
-    //     </CardContent>
-    //   </CardActionArea>
-    //   <CardActions>
-    //     <Button size="small" color="primary">
-    //       Share
-    //     </Button>
-    //     <Button size="small" color="primary">
-    //       Learn More
-    //     </Button>
-    //   </CardActions>
-    // </Card>
-  );
+  //return (
+  if (error) {
+    return (
+      <div>
+        Error: {error.message}
+      </div>
+    );
+  } else if (!isLoaded) {
+    return (
+      <div>
+        Loading...
+      </div>
+    );
+  } else {
+    return feed
+  }
 }
 
-export default function ClippedDrawer() {
+export default function Articles(props) {
   const classes = useStyles();
+  const [newArticle, setNewArticle] = useState(false);
 
   return (
     <div className={classes.root} align='center'>
-      {/* <CssBaseline />
-      <AppBar position="fixed" className={classes.appBar}>
-        <Toolbar>
-          <Typography variant="h6" noWrap>
-            Clipped drawer
-          </Typography>
-        </Toolbar>
-      </AppBar> */}
+      {/* <CssBaseline /> */}
       <Drawer
         className={classes.drawer}
         variant="permanent"
@@ -185,7 +164,10 @@ export default function ClippedDrawer() {
       </Drawer>
       <main className={classes.content}>
         {/* <div className={classes.toolbar}/> */}
-          {ImgMediaCard()}
+          {ArticleCards(newArticle)}
+          {(props.loggedIn) &&
+            <AddArticle newArticle={newArticle} setNewArticle={setNewArticle} />
+          }
       </main>
     </div>
   );
