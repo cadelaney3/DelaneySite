@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
-import ListItemText from '@material-ui/core/ListItemText';
 import ListItem from '@material-ui/core/ListItem';
 import List from '@material-ui/core/List';
 import Divider from '@material-ui/core/Divider';
@@ -92,37 +87,30 @@ export default function AddArticle(props) {
     }
 
     const handleChange = name => event => {
-      //event.persist();
-      //setArticle(event.target.value);
       setArticle({ ...article, [name]: event.target.value });
     }
 
     function handleSave() {
-      fetch("http://172.26.34.14:8080/addArticle", {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({ title: article.title,
-                               author: article.author,
-                               category: article.category,
-                               topic: article.topic,
-                               description: article.description,
-                               content: article.content
-                            })
-      })
+        console.log(article);
+        fetch("http://172.26.34.14:8080/addArticle", {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(article)
+        })
         .then(results => results.json())
         .then(data => {
-          if (data.status === 200) {
-            props.setNewArticle(true);
-            console.log(data);
-          } else {
-            console.log(data);
-          }
+            if (data.status === 200) {
+                props.setNewArticle(true);
+                console.log(data);
+            } else {
+                console.log(data);
+            }
         })
         .catch( err => {
-          console.log(err);
-          return Promise.reject();
+            console.log(err);
+            return Promise.reject();
         })
-      handleClose();
+        handleClose();
     }
   
     return (
@@ -217,10 +205,6 @@ export default function AddArticle(props) {
                         multiline
                         fullWidth
                     />
-                </ListItem>
-                <Divider />
-                <ListItem button>
-                    <ListItemText primary="Default notification ringtone" secondary="Tethys" />
                 </ListItem>
             </List>
         </Dialog>

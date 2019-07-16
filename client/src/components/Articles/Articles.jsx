@@ -38,24 +38,22 @@ const useStyles = makeStyles(theme => ({
   content: {
     display: 'flex',
     flexWrap: 'wrap',
-    justifyContent: 'space-evenly',
-    flexGrow: 1,
+    justifyContent: 'normal',
+    // flexGrow: 1,
     padding: theme.spacing(3),
   },
   card: {
     width: 450,
-    //margin: theme.spacing(1)
+    margin: theme.spacing(1)
   },
   toolbar: theme.mixins.toolbar,
 }));
 
-function ArticleCards(isNewArticle) {
+function ArticleCards(props) {
   const classes = useStyles();
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [articles, setArticles] = useState([]);
-  // const [newArticle, setNewArticle] = useState(isNewArticle);
-  const [feed, setFeed] = useState([]);
 
   const getResults = () => {
     //fetch("http://localhost:8080/home")
@@ -75,7 +73,87 @@ function ArticleCards(isNewArticle) {
 
   useEffect(() => {
     getResults();
-  }, [isNewArticle]);
+  }); //, [newArticle]);
+
+  useEffect(() => {
+    if (articles.article) {
+      console.log(articles);
+      props.setFeed(articles.article.map(item =>
+        <Card className={classes.card} key={item.title}>
+          <CardActionArea>
+            <CardContent align="left">
+              <Typography gutterBottom variant="h5" component="h2">
+                {item.title}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p">
+                {item.description}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+          <CardActions>
+            <Button size="small" color="primary">
+              Share
+            </Button>
+            <Button size="small" color="primary">
+              Learn More
+            </Button>
+          </CardActions>
+        </Card>
+      ));
+    } else {
+      props.setFeed(
+        <div>
+          Loading...
+        </div>
+      )
+    }
+  }, [isLoaded]);
+
+  //return (
+  if (error) {
+    return (
+      <div>
+        Error: {error.message}
+      </div>
+    );
+  } else if (!isLoaded) {
+    return (
+      <div>
+        Loading...
+      </div>
+    );
+  } else {
+    return props.feed
+  }
+}
+
+export default function Articles(props) {
+  const classes = useStyles();
+  const [newArticle, setNewArticle] = useState(false);
+  const [error, setError] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [articles, setArticles] = useState([]);
+  const [feed, setFeed] = useState(null);
+
+  const getResults = () => {
+    //fetch("http://localhost:8080/home")
+    fetch("http://172.26.34.14:8080/articles")
+    .then(res => res.json())
+    .then(result => {
+        setArticles(result);
+       // if( {articles} !== []) {
+        setIsLoaded(true);
+       // }
+    })
+    .catch(error => {
+        setIsLoaded(true);
+        setError(error);
+    })
+  };
+
+  useEffect(() => {
+    getResults();
+  }, [newArticle]);
 
   useEffect(() => {
     if (articles.article) {
@@ -102,40 +180,11 @@ function ArticleCards(isNewArticle) {
           </CardActions>
         </Card>
       ));
-    } else {
-      setFeed(
-        <div>
-          Loading...
-        </div>
-      )
-    }
-  }, [isLoaded]);
+    }    
+  }, [articles]);
 
-  //return (
-  if (error) {
-    return (
-      <div>
-        Error: {error.message}
-      </div>
-    );
-  } else if (!isLoaded) {
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-  } else {
-    return feed
-  }
-}
-
-export default function Articles(props) {
-  const classes = useStyles();
-  const [newArticle, setNewArticle] = useState(false);
-
-  return (
+  var page =
     <div className={classes.root} align='center'>
-      {/* <CssBaseline /> */}
       <Drawer
         className={classes.drawer}
         variant="permanent"
@@ -163,12 +212,30 @@ export default function Articles(props) {
         </List>
       </Drawer>
       <main className={classes.content}>
-        {/* <div className={classes.toolbar}/> */}
-          {ArticleCards(newArticle)}
+          { feed }
           {(props.loggedIn) &&
             <AddArticle newArticle={newArticle} setNewArticle={setNewArticle} />
           }
       </main>
     </div>
-  );
+  
+  if (error) {
+    return (
+      <div>
+        Error: {error.message}
+      </div>
+    );
+  } else if (!isLoaded) {
+    return (
+      <div>
+        Loading...
+      </div>
+    );
+  } else {
+    return( 
+      <div>
+        {page} 
+      </div>
+    );
+  }
 }
