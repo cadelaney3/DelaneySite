@@ -15,7 +15,9 @@ import Card from '@material-ui/core/Card';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
+import CardHeader from '@material-ui/core/CardHeader';
 import Button from '@material-ui/core/Button';
+import Divider from '@material-ui/core/Divider';
 import AddArticle from '../AddArticle/AddArticle';
 
 const drawerWidth = 240;
@@ -43,7 +45,11 @@ const useStyles = makeStyles(theme => ({
   },
   card: {
     width: 450,
+    height: 200,
     margin: theme.spacing(1)
+  },
+  typography: {
+    marginBottom: '5px',
   },
   octicon: {
     height: '24px',
@@ -72,6 +78,7 @@ export default function Articles(props) {
     .then(result => {
       setArticles(result);
       setIsLoaded(true);
+      setError(null);
     })
     .catch(error => {
       setIsLoaded(true);
@@ -103,12 +110,19 @@ export default function Articles(props) {
       setFeed(articles.article.map(item =>
         <Card className={classes.card} key={item.title}>
           <CardActionArea>
+            <CardHeader
+              marginBottom="5px"
+              align="left" 
+              title={item.title}
+              subheader={item.author + ", " + item.date}
+            />
             <CardContent align="left">
-              <Typography gutterBottom variant="h5" component="h2">
-                {item.title}
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p">
+              <Typography className={classes.typography} variant="body2" color="textSecondary" component="p">
                 {item.description}
+              </Typography>
+              <Divider />
+              <Typography variant="caption" color="textSecondary" component="p">
+                {item.category} / {item.topic}
               </Typography>
             </CardContent>
           </CardActionArea>
@@ -129,7 +143,7 @@ export default function Articles(props) {
     }
   }, [articles, filter]);
 
-  var page =
+  return (
     <div className={classes.root} align='center'>
       <Drawer
         className={classes.drawer}
@@ -151,30 +165,11 @@ export default function Articles(props) {
         </List>
       </Drawer>
       <main className={classes.content}>
-          { feed }
+          { (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : feed }
           {(props.loggedIn) &&
             <AddArticle newArticle={newArticle} setNewArticle={setNewArticle} />
           }
       </main>
     </div>
-  
-  if (error) {
-    return (
-      <div>
-        Error: {error.message}
-      </div>
-    );
-  } else if (!isLoaded) {
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-  } else {
-    return( 
-      <div>
-        {page} 
-      </div>
-    );
-  }
+  );
 }
