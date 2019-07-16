@@ -85,7 +85,7 @@ export default function SignIn(props) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetch("http://172.17.251.115:8080/signin", {
+    fetch("http://172.26.34.14:8080/signin", {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ username: username, password: password })
@@ -94,7 +94,8 @@ export default function SignIn(props) {
       .then(data => {
         if (data.status === 200) {
           props.handleSignInChange();
-          props.history.push("/home");
+          //props.history.push("/home");
+          props.history.goBack();
         } else {
           setErrorMessage(data.message);
           setIsError(true);
