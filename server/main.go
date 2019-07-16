@@ -167,7 +167,7 @@ func articles(w http.ResponseWriter, r *http.Request) {
 		}
 		articleList = append(articleList, art)
 	}
-	log.Println(articleList)
+
 	err = rows.Err()
 	if err != nil {
 		panic(err)
@@ -198,6 +198,21 @@ func addArticle(w http.ResponseWriter, r *http.Request) {
 
 	if incomingArticle != (article{}) {
 		log.Println(incomingArticle)
+		statement := `insert into articles(title, author, category, topic, description, article_content)
+				      values (@title, @author, @category, @topic, @description, @content)`
+		_, err = azureDB.Exec(statement, sql.Named("title", incomingArticle.Title), sql.Named("author", incomingArticle.Author),
+								sql.Named("category", incomingArticle.Category), sql.Named("topic", incomingArticle.Topic),
+								sql.Named("description", incomingArticle.Description), sql.Named("content", incomingArticle.Content))
+		if err != nil {
+			respo := response{
+				Status: 500,
+				Message: "Internal server error",
+			}
+			resp, _ := json.Marshal(respo)
+			w.Write(resp)
+			panic(err)
+			return
+		}
 		respo := response{
 			Status: 200,
 			Message: "Successful entry",
@@ -257,9 +272,6 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 
 	session, _ := store.Get(r, "cookie-name")
 
-	// Authentication goes here
-	// ...
-
 	credents := creds{}
 
 	err := json.NewDecoder(r.Body).Decode(&credents)
@@ -270,7 +282,6 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//result := db.QueryRow("select password from account where username=$1", credents.Username)
 	result := azureDB.QueryRow("select password from users where username=@username", sql.Named("username", credents.Username))
 	if err != nil {
 		// If there is an issue with the database, return a 500 error
@@ -440,7 +451,6 @@ func main() {
 	err = json.Unmarshal(f, &keys)
 
 	setupRoutes()
-	// connDB(keys)
 	azureDB = db.InitAzureDB(keys)
 
 	log.Println("Now server running on port 8080")
