@@ -186,6 +186,34 @@ func articles(w http.ResponseWriter, r *http.Request) {
 	w.Write(resB)
 }
 
+func addArticle(w http.ResponseWriter, r *http.Request) {
+	incomingArticle := article{}
+
+	err := json.NewDecoder(r.Body).Decode(&incomingArticle)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(incomingArticle)
+
+	if incomingArticle != (article{}) {
+		log.Println(incomingArticle)
+		respo := response{
+			Status: 200,
+			Message: "Successful entry",
+		}
+		resp, _ := json.Marshal(respo)
+		w.Write(resp)
+		return
+	}
+	respo := response{
+		Status: 401,
+		Message: "Invalid entry",
+	}
+	resp, _ := json.Marshal(respo)
+	w.Write(resp)
+}
+
 func addFact(w http.ResponseWriter, r *http.Request) {
 
 	incomingFact := fact{}
@@ -358,6 +386,7 @@ func setupRoutes() {
 	http.HandleFunc("/signin", Chain(signIn, methodHandler("POST")))
 	http.HandleFunc("/addFact", Chain(addFact, methodHandler("POST")))
 	http.HandleFunc("/articles", articles)
+	http.HandleFunc("/addArticle", Chain(addArticle, methodHandler("POST")))
 }
 
 func secret(w http.ResponseWriter, r *http.Request) {
