@@ -90,7 +90,7 @@ export default function About(props) {
 
     const getResults = () => {
         //fetch("http://localhost:8080/home")
-        fetch("http://172.26.34.14:8080/about")
+        fetch("http://172.17.49.103:8080/about")
         .then(res => res.json())
         .then(result => {
             setItems(result);

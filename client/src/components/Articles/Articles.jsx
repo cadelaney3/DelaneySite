@@ -73,7 +73,7 @@ export default function Articles(props) {
   const handleFilter = text => () => {
     console.log(text);
     setFilter(text);
-    fetch("http://172.26.34.14:8080/articles?cat=" + text.toLowerCase())
+    fetch("http://172.17.49.103:8080/articles?cat=" + text.toLowerCase())
     .then(res => res.json())
     .then(result => {
       setArticles(result);
@@ -88,7 +88,7 @@ export default function Articles(props) {
 
   const getResults = () => {
     //fetch("http://localhost:8080/home")
-    fetch("http://172.26.34.14:8080/articles")
+    fetch("http://172.17.49.103:8080/articles")
     .then(res => res.json())
     .then(result => {
         setArticles(result);
