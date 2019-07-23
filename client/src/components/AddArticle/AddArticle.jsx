@@ -92,7 +92,7 @@ export default function AddArticle(props) {
 
     function handleSave() {
         console.log(article);
-        fetch("http://172.17.49.103:8080/addArticle", {
+        fetch("http://172.28.8.37:8080/addArticle", {
             method: "POST",
             headers: headers,
             body: JSON.stringify(article)

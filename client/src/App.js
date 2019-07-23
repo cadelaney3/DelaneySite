@@ -65,58 +65,6 @@ export default function App() {
   );
 }
 
-/*
-class HomePage extends Component {
-  constructor(props) {
-    super(props);
-
-    console.log(sessionStorage.getItem('loggedIn'));
-
-    this.state = {
-      error: null,
-      isLoaded: false,
-      items: []
-    };
-  }
-
-  componentDidMount() {
-    //fetch("http://localhost:8080/home")
-    fetch("http://172.17.21.104:8080/home")
-    .then(res => res.json())
-    .then(
-      (result) => {
-        this.setState({
-          isLoaded: true,
-          items: result
-        });
-      },
-      (error) => {
-        this.setState({
-          isLoaded: true,
-          error
-        });
-      }
-    )
-  }
-
-  render() {
-    const { error, isLoaded, items } = this.state;
-    if (error) {
-      return <div>Error: {error.message}</div>;
-    } else if (!isLoaded) {
-      return <div>Loading...</div>;
-    } else {
-      return (
-        <div className="HomePage">
-          <Home items={items} />
-        </div>
-      );
-    }
-  }
-
-}
-*/
-
 class WS extends Component {
   constructor(props) {
     super(props);
