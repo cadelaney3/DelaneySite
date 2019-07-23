@@ -161,9 +161,12 @@ func articles(w http.ResponseWriter, r *http.Request) {
 	cat := html.EscapeString(r.URL.Query().Get("cat"))
 
 	sqlStmt := "select title, author, category, topic, description, article_content, date_created from articles"
-
+	
 	if cat != "" {
 		sqlStmt += " where category = " + "'" + cat + "'"
+	}
+	if cat == "drafts" {
+		sqlStmt = "select title, author, category, topic, description, article_content, date_created from article_drafts"
 	}
 	rows, err := azureDB.Query(sqlStmt)
 	if err != nil {
@@ -213,6 +216,49 @@ func addArticle(w http.ResponseWriter, r *http.Request) {
 	if incomingArticle != (article{}) {
 		log.Println(incomingArticle)
 		statement := `insert into articles(title, author, category, topic, description, article_content)
+				      values (@title, @author, @category, @topic, @description, @content)`
+		_, err = azureDB.Exec(statement, sql.Named("title", incomingArticle.Title), sql.Named("author", incomingArticle.Author),
+								sql.Named("category", incomingArticle.Category), sql.Named("topic", incomingArticle.Topic),
+								sql.Named("description", incomingArticle.Description), sql.Named("content", incomingArticle.Content))
+		if err != nil {
+			respo := response{
+				Status: 500,
+				Message: "Internal server error",
+			}
+			resp, _ := json.Marshal(respo)
+			w.Write(resp)
+			panic(err)
+			return
+		}
+		respo := response{
+			Status: 200,
+			Message: "Successful entry",
+		}
+		resp, _ := json.Marshal(respo)
+		w.Write(resp)
+		return
+	}
+	respo := response{
+		Status: 401,
+		Message: "Invalid entry",
+	}
+	resp, _ := json.Marshal(respo)
+	w.Write(resp)
+}
+
+func addArticleDraft(w http.ResponseWriter, r *http.Request) {
+	incomingArticle := article{}
+
+	err := json.NewDecoder(r.Body).Decode(&incomingArticle)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(incomingArticle)
+
+	if incomingArticle != (article{}) {
+		log.Println(incomingArticle)
+		statement := `insert into article_drafts(title, author, category, topic, description, article_content)
 				      values (@title, @author, @category, @topic, @description, @content)`
 		_, err = azureDB.Exec(statement, sql.Named("title", incomingArticle.Title), sql.Named("author", incomingArticle.Author),
 								sql.Named("category", incomingArticle.Category), sql.Named("topic", incomingArticle.Topic),
@@ -412,6 +458,7 @@ func setupRoutes() {
 	http.HandleFunc("/addFact", Chain(addFact, methodHandler("POST")))
 	http.HandleFunc("/articles", Chain(articles, methodHandler("GET")))
 	http.HandleFunc("/addArticle", Chain(addArticle, methodHandler("POST")))
+	http.HandleFunc("/addArticleDraft", Chain(addArticleDraft, methodHandler("POST")))
 }
 
 func secret(w http.ResponseWriter, r *http.Request) {

@@ -10,6 +10,7 @@ import DirectionsRunIcon from '@material-ui/icons/DirectionsRun';
 import TimerIcon from '@material-ui/icons/Timer';
 import DevicesIcon from '@material-ui/icons/Devices';
 import FitnessIcon from '@material-ui/icons/FitnessCenter';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
 import Octicon, {Beaker} from '@primer/octicons-react';
 import Card from '@material-ui/core/Card';
 import CardActionArea from '@material-ui/core/CardActionArea';
@@ -46,7 +47,15 @@ const useStyles = makeStyles(theme => ({
   card: {
     width: 450,
     height: 200,
-    margin: theme.spacing(1)
+    margin: theme.spacing(1),
+    paddingBottom: 0
+  },
+  cardContent: {
+    paddingTop: 0,
+    // height: 0
+  },
+  cardActions: {
+    margin: '3px'
   },
   typography: {
     marginBottom: '5px',
@@ -116,7 +125,7 @@ export default function Articles(props) {
               title={item.title}
               subheader={item.author + ", " + item.date}
             />
-            <CardContent align="left">
+            <CardContent className={classes.cardContent} align="left">
               <Typography className={classes.typography} variant="body2" color="textSecondary" component="p">
                 {item.description}
               </Typography>
@@ -126,7 +135,7 @@ export default function Articles(props) {
               </Typography>
             </CardContent>
           </CardActionArea>
-          <CardActions>
+          <CardActions className={classes.cardActions}>
             <Button size="small" color="primary">
               Share
             </Button>
@@ -162,6 +171,14 @@ export default function Articles(props) {
               <ListItemText primary={text} />
             </ListItem>
           ))}
+          {(props.loggedIn) && 
+            <ListItem button key="drafts" onClick={handleFilter("drafts")}>
+              <ListItemIcon>
+                <InboxIcon />
+              </ListItemIcon>
+              <ListItemText primary="Drafts" />
+            </ListItem>
+          }
         </List>
       </Drawer>
       <main className={classes.content}>
