@@ -47,7 +47,7 @@ export default function AddFact(props) {
     }
 
     function handleSave() {
-      fetch("http://172.28.8.37:8080/addFact", {
+      fetch("http://172.23.90.20:8080/addFact", {
         method: "POST",
         headers: headers,
         body: JSON.stringify({ fact: fact })

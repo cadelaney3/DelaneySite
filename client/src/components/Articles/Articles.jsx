@@ -20,6 +20,7 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import AddArticle from '../AddArticle/AddArticle';
+import FullArticle from '../FullArticle/FullArticle';
 
 const drawerWidth = 240;
 
@@ -82,7 +83,7 @@ export default function Articles(props) {
   const handleFilter = text => () => {
     console.log(text);
     setFilter(text);
-    fetch("http://172.28.8.37:8080/articles?cat=" + text.toLowerCase())
+    fetch("http://172.23.90.20:8080/articles?cat=" + text.toLowerCase())
     .then(res => res.json())
     .then(result => {
       setArticles(result);
@@ -97,7 +98,7 @@ export default function Articles(props) {
 
   const getResults = () => {
     //fetch("http://localhost:8080/home")
-    fetch("http://172.28.8.37:8080/articles")
+    fetch("http://172.23.90.20:8080/articles")
     .then(res => res.json())
     .then(result => {
         setArticles(result);
@@ -113,12 +114,16 @@ export default function Articles(props) {
     getResults();
   }, [newArticle]);
 
+  const handleArticleClick = item => () => {
+    setFeed(<FullArticle article={item} />)
+  }
+
   useEffect(() => {
     if (articles.article) {
       console.log(articles);
       setFeed(articles.article.map(item =>
         <Card className={classes.card} key={item.title}>
-          <CardActionArea>
+          <CardActionArea onClick={handleArticleClick(item)}>
             <CardHeader
               marginBottom="5px"
               align="left" 

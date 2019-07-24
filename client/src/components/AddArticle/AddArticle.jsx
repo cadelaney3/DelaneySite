@@ -115,7 +115,7 @@ export default function AddArticle(props) {
 
     function handleDraft() {
         console.log(article);
-        fetch("http://172.28.8.37:8080/addArticleDraft", {
+        fetch("http://172.23.90.20:8080/addArticleDraft", {
             method: "POST",
             headers: headers,
             body: JSON.stringify(article)
