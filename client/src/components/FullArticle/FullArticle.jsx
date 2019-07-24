@@ -9,8 +9,10 @@ import Avatar from '@material-ui/core/Avatar';
 
 const useStyles = makeStyles(theme => ({
     root: {
-        display: 'flex',
-        padding: theme.spacing(3, 2)
+        // display: 'flex',
+        width: '100%',
+        padding: theme.spacing(3, 2),
+        
     },
     avatar: {
         margin: 10,
@@ -21,12 +23,12 @@ export default function FullArticle(props) {
     const classes = useStyles();
 
     return (
-        <div>
+        // <div>
             <Paper className={classes.root}>
                 <Typography variant="h3" gutterBottom>
                     {props.article.title}
                 </Typography>
-                <Grid container alignItems="left">
+                <Grid container alignItems="center">
                     <Avatar alt="Chris" src="../../images/mugshot.jpg" className={classes.avatar} />
                     <Typography variant="subtitle1" gutterBottom>
                         {props.article.author}
@@ -43,10 +45,10 @@ export default function FullArticle(props) {
                         {props.article.topic}
                     </Typography>
                 </Grid>
-                <Typography variant="body1">
+                <Typography component="p">
                     {props.article.content}
                 </Typography>
             </Paper>
-        </div>
+        // </div>
     )
 }
