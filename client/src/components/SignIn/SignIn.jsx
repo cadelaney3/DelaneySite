@@ -85,26 +85,26 @@ export default function SignIn(props) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetch("http://172.23.90.20:8080/signin", {
+    fetch("http://localhost:8080/signin", {
       method: "POST",
-      headers: headers,
+      // headers: headers,
       body: JSON.stringify({ username: username, password: password })
     })
-      .then(results => results.json())
-      .then(data => {
-        if (data.status === 200) {
-          props.handleSignInChange();
-          //props.history.push("/home");
-          props.history.goBack();
-        } else {
-          setErrorMessage(data.message);
-          setIsError(true);
-        }
-      })
-      .catch( err => {
-        console.log(err);
-        return Promise.reject();
-      })
+    .then(results => results.json())
+    .then(data => {
+      if (data.status === 200) {
+        props.handleSignInChange();
+        //props.history.push("/home");
+        props.history.goBack();
+      } else {
+        setErrorMessage(data.message);
+        setIsError(true);
+      }
+    })
+    .catch( err => {
+      console.log(err);
+      return Promise.reject();
+    })
   }
 
   return (

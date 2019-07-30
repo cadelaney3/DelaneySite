@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import { withRouter } from 'react-router';
+import { Route, Link, NavLink, Redirect } from 'react-router-dom';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
@@ -68,7 +70,7 @@ const useStyles = makeStyles(theme => ({
   toolbar: theme.mixins.toolbar,
 }));
 
-export default function Articles(props) {
+export default withRouter(function Articles(props) {
   const classes = useStyles();
   const [newArticle, setNewArticle] = useState(false);
   const [error, setError] = useState(null);
@@ -76,29 +78,25 @@ export default function Articles(props) {
   const [articles, setArticles] = useState([]);
   const [feed, setFeed] = useState(null);
   const [filter, setFilter] = useState(null);
+  const [article, setArticle] = useState(null);
+  const [isArticleClicked, setIsArticleClicked] = useState(false);
+  const [page, setPage] = useState(<div></div>);
 
   const categories = ['Latest', 'Science', 'Technology', 'Sports', 'Health']
   const icons = [<TimerIcon />, <Octicon icon={Beaker} className={classes.octicon} />, <DevicesIcon />, <DirectionsRunIcon />, <FitnessIcon />]
 
   const handleFilter = text => () => {
-    console.log(text);
     setFilter(text);
-    fetch("http://172.23.90.20:8080/articles?cat=" + text.toLowerCase())
-    .then(res => res.json())
-    .then(result => {
-      setArticles(result);
-      setIsLoaded(true);
-      setError(null);
-    })
-    .catch(error => {
-      setIsLoaded(true);
-      setError(error);
-    })
   }
 
   const getResults = () => {
-    //fetch("http://localhost:8080/home")
-    fetch("http://172.23.90.20:8080/articles")
+    console.log(filter);
+    var query = "";
+    if (filter !== null) {
+      query = "?cat=" + filter.toLowerCase();
+      console.log("filter is null");
+    }
+    fetch("http://localhost:8080/articles" + query)
     .then(res => res.json())
     .then(result => {
         setArticles(result);
@@ -112,20 +110,22 @@ export default function Articles(props) {
 
   useEffect(() => {
     getResults();
-  }, [newArticle]);
+  }, [newArticle, filter]);
 
   const handleArticleClick = item => () => {
-    setFeed(<FullArticle article={item} />)
+    setArticle(<div><FullArticle article={item} /></div>);
+    setIsArticleClicked(true);
+    // props.history.push(`/articles/${item.title}`);
   }
 
   useEffect(() => {
     if (articles.article) {
       console.log(articles);
       setFeed(articles.article.map(item =>
+        <Link to={{pathname:`${props.match.url}/${item.title}`, article: item}} key={item.id}>
         <Card className={classes.card} key={item.title}>
-          <CardActionArea onClick={handleArticleClick(item)}>
+          <CardActionArea onClick={handleArticleClick(item)}> 
             <CardHeader
-              marginBottom="5px"
               align="left" 
               title={item.title}
               subheader={item.author + ", " + item.date}
@@ -149,6 +149,7 @@ export default function Articles(props) {
             </Button>
           </CardActions>
         </Card>
+        </Link>
       ));
     } else {
       setFeed(
@@ -157,7 +158,8 @@ export default function Articles(props) {
     }
   }, [articles, filter]);
 
-  return (
+  useEffect(() => {
+    setPage(
     <div className={classes.root} align='center'>
       <Drawer
         className={classes.drawer}
@@ -187,11 +189,16 @@ export default function Articles(props) {
         </List>
       </Drawer>
       <main className={classes.content}>
-          { (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : feed }
+          { (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : feed } {/*(isArticleClicked) ? article : feed */}
           {(props.loggedIn) &&
             <AddArticle newArticle={newArticle} setNewArticle={setNewArticle} />
           }
       </main>
     </div>
+    )
+  }, [isArticleClicked, isLoaded, feed]);
+
+  return (
+    page
   );
-}
+})
