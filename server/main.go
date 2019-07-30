@@ -59,6 +59,7 @@ type fact struct {
 }
 
 type article struct {
+	Id string `json:"id"`
 	Title string `json:"title"`
 	Author string `json:"author"`
 	Category string `json:"category"`
@@ -159,14 +160,22 @@ func articles(w http.ResponseWriter, r *http.Request) {
 	log.Println(u)
 	
 	cat := html.EscapeString(r.URL.Query().Get("cat"))
+	id := html.EscapeString(r.URL.Query().Get("id"))
+	title := html.EscapeString(r.URL.Query().Get("title"))
 
-	sqlStmt := "select title, author, category, topic, description, article_content, date_created from articles"
+	sqlStmt := "select id, title, author, category, topic, description, article_content, date_created from articles"
 	
 	if cat != "" {
 		sqlStmt += " where category = " + "'" + cat + "'"
 	}
 	if cat == "drafts" {
-		sqlStmt = "select title, author, category, topic, description, article_content, date_created from article_drafts"
+		sqlStmt = "select id, title, author, category, topic, description, article_content, date_created from article_drafts"
+	}
+	if id != "" {
+		sqlStmt += " where id=" + "'" + id + "'"
+	}
+	if title != "" {
+		sqlStmt += " where title=" + "'" + title + "'"
 	}
 	rows, err := azureDB.Query(sqlStmt)
 	if err != nil {
@@ -175,7 +184,7 @@ func articles(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	for rows.Next() {
 		var art article
-		err = rows.Scan(&art.Title, &art.Author, &art.Category, &art.Topic, &art.Description, &art.Content, &art.Date)
+		err = rows.Scan(&art.Id, &art.Title, &art.Author, &art.Category, &art.Topic, &art.Description, &art.Content, &art.Date)
 		if err != nil {
 			panic(err)
 		}
@@ -421,7 +430,7 @@ func methodHandler(method string) Middleware {
 			// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			// 	return
 			// }
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Content-Type", "text/plain")
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Header().Set("Access-Control-Allow-Headers", "*")
 			w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST")
