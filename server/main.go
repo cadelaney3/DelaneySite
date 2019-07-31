@@ -66,7 +66,7 @@ type article struct {
 	Topic string `json:"topic"`
 	Description string `json:"description"`
 	Content string `json:"content"`
-	Date time.Time `json:"date"`
+	Date string `json:"date"`
 }
 
 type articleResponse struct {
@@ -182,12 +182,16 @@ func articles(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	defer rows.Close()
+
+	var tempDate time.Time
 	for rows.Next() {
 		var art article
-		err = rows.Scan(&art.Id, &art.Title, &art.Author, &art.Category, &art.Topic, &art.Description, &art.Content, &art.Date)
+		err = rows.Scan(&art.Id, &art.Title, &art.Author, &art.Category, &art.Topic, &art.Description, &art.Content, &tempDate)
 		if err != nil {
 			panic(err)
 		}
+		layoutUS  := "January 2, 2006"
+		art.Date = tempDate.Format(layoutUS)
 		articleList = append(articleList, art)
 	}
 
