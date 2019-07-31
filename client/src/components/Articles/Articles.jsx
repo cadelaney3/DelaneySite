@@ -96,7 +96,7 @@ export default withRouter(function Articles(props) {
       query = "?cat=" + filter.toLowerCase();
       console.log("filter is null");
     }
-    fetch("http://localhost:8080/articles" + query)
+    fetch("http://172.25.59.60:8080/articles" + query)
     .then(res => res.json())
     .then(result => {
         setArticles(result);
@@ -122,7 +122,7 @@ export default withRouter(function Articles(props) {
     if (articles.article) {
       console.log(articles);
       setFeed(articles.article.map(item =>
-        <Link to={{pathname:`${props.match.url}/${item.title}`, article: item}} key={item.id}>
+        <Link to={{pathname:`${props.match.url}/${item.title.replace(/\s+/g, '-').toLowerCase()}`, article: item}} key={item.id}>
         <Card className={classes.card} key={item.title}>
           <CardActionArea onClick={handleArticleClick(item)}> 
             <CardHeader
@@ -191,7 +191,7 @@ export default withRouter(function Articles(props) {
       <main className={classes.content}>
           { (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : feed } {/*(isArticleClicked) ? article : feed */}
           {(props.loggedIn) &&
-            <AddArticle newArticle={newArticle} setNewArticle={setNewArticle} />
+            <AddArticle newArticle={newArticle} setNewArticle={setNewArticle}/>
           }
       </main>
     </div>
