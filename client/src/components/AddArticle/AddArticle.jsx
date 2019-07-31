@@ -4,6 +4,7 @@ import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
+import EditIcon from '@material-ui/icons/Edit';
 import { makeStyles } from '@material-ui/core/styles';
 import ListItem from '@material-ui/core/ListItem';
 import List from '@material-ui/core/List';
@@ -66,15 +67,17 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   });
 
 export default function AddArticle(props) {
+    console.log(props.content.title);
+
     const classes = useStyles();
     const [open, setOpen] = useState(false);
     const [article, setArticle] = useState({
-        title: "",
-        author: "",
-        category: "",
-        topic: "",
-        description: "",
-        content: "",
+        title: props.content.title, //((props.content) ? props.content.title : ""),
+        author: ((props.content) ? props.content.author : ""),
+        category: (props.content) ? props.content.category : "",
+        topic: (props.content) ? props.content.topic : "",
+        description: (props.content) ? props.content.description : "",
+        content: (props.content) ? props.content.content : "",
     });
   
     function handleClickOpen() {
@@ -115,9 +118,9 @@ export default function AddArticle(props) {
 
     function handleDraft() {
         console.log(article);
-        fetch("http://localhost:8080/addArticleDraft", {
+        fetch("http://172.25.59.60:8080/addArticleDraft", {
             method: "POST",
-            headers: headers,
+            // headers: headers,
             body: JSON.stringify(article)
         })
         .then(results => results.json())
@@ -139,7 +142,7 @@ export default function AddArticle(props) {
     return (
       <div>
         <Fab aria-label="Add" className={classes.fab}>
-            <AddIcon onClick={handleClickOpen} />
+            {(props.content) ? <EditIcon onClick={handleClickOpen} /> : <AddIcon onClick={handleClickOpen} />}
         </Fab>
         <Dialog fullScreen open={open} onClose={handleClose} TransitionComponent={Transition}>
             <AppBar className={classes.appBar}>
@@ -168,6 +171,7 @@ export default function AddArticle(props) {
                         className={classes.textField}
                         type="text"
                         onChange={handleChange('title')}
+                        value={article.title}
                         multiline
                     />
                     <TextField
@@ -177,6 +181,7 @@ export default function AddArticle(props) {
                         className={classes.textField}
                         type="text"
                         onChange={handleChange('author')}
+                        value={article.author}
                         multiline
                     />
                     <TextField
@@ -186,6 +191,7 @@ export default function AddArticle(props) {
                         className={classes.textField}
                         type="text"
                         onChange={handleChange('category')}
+                        value={article.category}
                         multiline
                     />
                     <TextField
@@ -195,6 +201,7 @@ export default function AddArticle(props) {
                         className={classes.textField}
                         type="text"
                         onChange={handleChange('topic')}
+                        value={article.topic}
                         multiline
                     />
                 </ListItem>
@@ -207,6 +214,7 @@ export default function AddArticle(props) {
                         className={classes.textField}
                         type="text"
                         onChange={handleChange('description')}
+                        value={article.description}
                         variant="outlined"
                         rows="3"
                         multiline
@@ -223,6 +231,7 @@ export default function AddArticle(props) {
                         className={classes.textField}
                         type="text"
                         onChange={handleChange('content')}
+                        value={article.content}
                         variant="outlined"
                         rows="30"
                         multiline
