@@ -101,7 +101,7 @@ const useStyles = makeStyles(theme => ({
     }),
     zIndex: theme.zIndex.drawer + 1,
     color: "#ffd600",
-    background: fade(theme.palette.common.black, 0.25),
+    background: fade(theme.palette.common.black, 0.95),
   },
   hide: {
     display: 'none',
@@ -188,7 +188,7 @@ export default withRouter(function Header(props) {
     <div className={classes.root}>
       <CssBaseline />
       <AppBar 
-        position="static"
+        position="sticky"
         className={classes.appBar}
       >
         <Toolbar disableGutters={!open}>
