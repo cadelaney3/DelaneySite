@@ -16,10 +16,12 @@ import AddFact from '../AddFact/AddFact';
 
 const useStyles = makeStyles(theme => ({
   root: {
-    flexGrow: 1,
-    paddingTop: theme.spacing(4),
+    // flexGrow: 1,
+    display: 'flex',
+    padding: theme.spacing(3),
   },
   image: {
+      display: 'block',
       width: 270,
       height: 270,
   },
@@ -77,7 +79,8 @@ const useStyles = makeStyles(theme => ({
       bottom: 20,
       right: 20,
       left: 'auto',
-  }
+  },
+  toolbar: theme.mixins.toolbar,
 }));
 
 export default function About(props) {
@@ -89,7 +92,7 @@ export default function About(props) {
 
 
     const getResults = () => {
-        fetch("http://localhost:8080/about")
+        fetch("http://172.25.59.60:8080/about")
         .then(res => res.json())
         .then(result => {
             setItems(result);
@@ -125,13 +128,13 @@ export default function About(props) {
 
     useEffect(() => {
         setAbout(
-            <Grid container className={classes.root} spacing={8}>
-                <Grid item xs={3}>
-                    <Grid container direction="column" spacing={8}>
+            <Grid container spacing={8}> {/*className={classes.root}*/}
+                <Grid item xs={3} >
+                    <Grid container direction="column" spacing={8} alignItems="center">
                         <Grid item>
-                            <ButtonBase className={classes.image}>
-                                <img className={classes.img} alt="Chris" src={mugshot} />
-                            </ButtonBase>
+                            {/* <ButtonBase className={classes.image}> */}
+                            <img className={classes.image} alt="Chris" src={mugshot} />
+                            {/* </ButtonBase> */}
                         </Grid>
                         <Grid item>
                             <Paper className={classes.firstColPaper} align='left'>
@@ -183,7 +186,7 @@ export default function About(props) {
         return <div>Loading...</div>;
     } else {
         return (
-            <div>
+            <div className={classes.root}>
                 {about}
                 {(props.loggedIn) &&
                     <AddFact newFact={newFact} setNewFact={setNewFact} />
