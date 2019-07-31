@@ -4,33 +4,21 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import Avatar from '@material-ui/core/Avatar';
-
-const drawerWidth = 240;
+import mugshot from '../../images/mugshot.jpg';
 
 const useStyles = makeStyles(theme => ({
     root: {
         display: 'flex',
+        justifyContent: 'center',
     },
-    drawer: {
-    width: drawerWidth,
-    flexShrink: 0,
+    paper: {
+        justifyContent: 'center',
+        width: '75%',
+        padding: theme.spacing(3, 2)
     },
-    drawerPaper: {
-    width: drawerWidth,
-    },
-    content: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'normal',
-    // flexGrow: 1,
-    padding: theme.spacing(3),
-    },
-    avatar: {
-        margin: 10,
-    },
-    octicon: {
-        height: '24px',
-        width: '24px',
+    typography: {
+        marginTop: '5px',
+        marginLeft: '5px',
     },
 }));
 
@@ -69,30 +57,46 @@ export default function FullArticle(props) {
         if (articles.article) {
             console.log("articles: ", articles);
             setFeed(articles.article.map(item =>
-                <Paper className={classes.root}>
-                    <Typography variant="h3" gutterBottom>
-                        {item.title}
-                    </Typography>
-                    <Grid container alignItems="center">
-                        <Avatar alt="Chris" src="../../images/mugshot.jpg" className={classes.avatar} />
-                        <Typography variant="subtitle1" gutterBottom>
-                            {item.author}
-                        </Typography>
-                        <Typography variant="subtitle1" gutterBottom>
-                            {item.date}
-                        </Typography>
+                <Paper className={classes.paper} key={item.title}>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                            <Typography variant="h3" gutterBottom>
+                                {item.title}
+                            </Typography>
+                        </Grid>
+                        <Grid container direction="row" justify="flex-start" alignItems="center">
+                            <Grid item>
+                                <Avatar alt="Chris" src={mugshot} className={classes.avatar} />
+                            </Grid>
+                            <Grid item>
+                                <Typography className={classes.typography} variant="subtitle1" gutterBottom>
+                                    {item.author}
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <Typography className={classes.typography} variant="subtitle1" gutterBottom>
+                                    {item.date}
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                        <Grid container direction="row" justify="flex-start" alignItems="center">
+                            <Grid item>
+                                <Typography variant="caption" gutterBottom>
+                                    {item.category}
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <Typography variant="caption" gutterBottom>
+                                    {item.topic}
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Typography component="p">
+                                {item.content}
+                            </Typography>
+                        </Grid>
                     </Grid>
-                    <Grid container alignItems="center">
-                        <Typography variant="caption" gutterBottom>
-                            {item.category}
-                        </Typography>
-                        <Typography variant="caption" gutterBottom>
-                            {item.topic}
-                        </Typography>
-                    </Grid>
-                    <Typography component="p">
-                        {item.content}
-                    </Typography>
                 </Paper>
             ));
         } else {
@@ -103,6 +107,6 @@ export default function FullArticle(props) {
     }, [isLoaded]);
 
     return (
-        (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : feed
+        (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : <div className={classes.root}> {feed} </div>
     );
 }
