@@ -5,7 +5,11 @@ import (
     "database/sql"
     "context"
     "log"
-    "fmt"
+	"fmt"
+	"time"
+	
+	"go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type AzureDBConn struct {
@@ -82,4 +86,23 @@ func InitPostgresDB(keys map[string]map[string]string) *sql.DB {
 	} 
 	fmt.Println("Successfully connected!")
 	return postgresDB
+}
+
+func InitMongodb(user, password string) *mongo.Client {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://" + user + ":" +
+		password + "@cluster0-ztlui.mongodb.net/test?retryWrites=true&w=majority"))
+
+    if err != nil {
+		log.Println("Error with MongoDB client URI: ", err)
+		return nil
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+
+    if err != nil {
+        log.Println("Error connecting to MongoDB: ", err)
+	}
+
+    return client
 }

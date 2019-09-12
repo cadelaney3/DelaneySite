@@ -12,15 +12,28 @@ import (
 	"os"
 	"time"
 	"html"
+	"strings"
+	"context"
+	// "net/url"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
 	"github.com/cadelaney3/delaneySite/pkg/db"
+	"github.com/cadelaney3/delaneySite/utils"
+	mw "github.com/cadelaney3/delaneySite/middleware"
 	"github.com/gorilla/sessions"
+	jwt "github.com/dgrijalva/jwt-go"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 var keys = make(map[string]map[string]string)
 var azureDB *sql.DB
+var client *mongo.Client
+
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 	key = []byte(os.Getenv("SESSION_KEY"))
@@ -31,23 +44,12 @@ var (
 //var validPath = regexp.MustCompile("^/(ws|edit|save|view)/([a-zA-Z0-9]+)$")
 var validPath = regexp.MustCompile("^/(ws|view|home|signin)")
 
-type Middleware func(http.HandlerFunc) http.HandlerFunc
-
-type Credentials struct {
-	Username string `json:"username", db:"username"`
-	Password string `json:"password", db:"password"`
-	Email string `json:"email", db:"email"`
-}
 
 type aboutResponse struct {
 	Body string `json:"body"`
 	Facts []string `json:"facts"`
 }
 
-type creds struct {
-	Username string `json:"username"`
-	Password string `password:"password"`
-}
 
 type response struct {
 	Status int `json:"status"`
@@ -71,6 +73,69 @@ type article struct {
 
 type articleResponse struct {
 	Articles []article `json:"article"`
+}
+
+type Credentials struct {
+	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Token string `json:"token"`
+}
+
+type Token struct {
+	UserId string
+	jwt.StandardClaims
+}
+
+func Authenticate(w http.ResponseWriter, r *http.Request) {
+	credentials := Credentials{}
+	session, _ := store.Get(r, "cookie-name")
+
+	err := json.NewDecoder(r.Body).Decode(&credentials)
+	if err != nil {
+		log.Println(err)		
+	}
+	if credentials == (Credentials{}) {
+		return
+	}
+
+	storedCreds := Credentials{}
+	collection := client.Database("delaney-db").Collection("users")
+	filter := bson.M{"username": credentials.Username}
+	documentReturned := collection.FindOne(context.TODO(), filter)
+	err = documentReturned.Decode(&storedCreds)
+	if err != nil {
+		message := utils.Message(http.StatusInternalServerError, "Internal server error")
+		w.WriteHeader(http.StatusInternalServerError)
+		utils.Response(w, message)
+		log.Println(err)
+		return		
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(credentials.Password)); err != nil {
+		// If the two passwords don't match, return a 401 status
+		log.Println(err)
+		w.WriteHeader(http.StatusUnauthorized)
+		message := utils.Message(http.StatusUnauthorized, "Invalid username or password")
+		utils.Response(w, message)
+		return
+	}
+
+	// Set user as authenticated
+	session.Values["authenticated"] = true
+	session.Save(r, w)
+
+	//Create JWT token
+	tk := &Token{UserId: storedCreds.ID.String()}
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
+	tokenString, _ := token.SignedString([]byte(os.Getenv("token_password")))
+	storedCreds.Token = tokenString //Store the token in the response
+	storedCreds.Password = ""
+
+	message := utils.Message(http.StatusOK, "Success")
+	message["account"] = storedCreds
+
+	utils.Response(w, message)
 }
 
 // define our WebSocket endpoint
@@ -154,6 +219,7 @@ func about(w http.ResponseWriter, r *http.Request) {
 }
 
 func articles(w http.ResponseWriter, r *http.Request) {
+
 	var articleList []article
 
 	u := html.EscapeString(r.URL.Path)
@@ -162,6 +228,8 @@ func articles(w http.ResponseWriter, r *http.Request) {
 	cat := html.EscapeString(r.URL.Query().Get("cat"))
 	id := html.EscapeString(r.URL.Query().Get("id"))
 	title := html.EscapeString(r.URL.Query().Get("title"))
+	// log.Println("title: ", strings.Split(title, "-"))
+	title = strings.Join(strings.Split(title, "-"), " ")
 
 	sqlStmt := "select id, title, author, category, topic, description, article_content, date_created from articles"
 	
@@ -175,7 +243,7 @@ func articles(w http.ResponseWriter, r *http.Request) {
 		sqlStmt += " where id=" + "'" + id + "'"
 	}
 	if title != "" {
-		sqlStmt += " where title=" + "'" + title + "'"
+		sqlStmt += " where LOWER(title)=" + "'" + title + "'"
 	}
 	rows, err := azureDB.Query(sqlStmt)
 	if err != nil {
@@ -341,139 +409,6 @@ func addFact(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-func signIn(w http.ResponseWriter, r *http.Request) {
-
-	session, _ := store.Get(r, "cookie-name")
-
-	credents := creds{}
-
-	err := json.NewDecoder(r.Body).Decode(&credents)
-	if err != nil {
-		log.Println(err)		
-	}
-	if credents == (creds{}) {
-		return
-	}
-
-	result := azureDB.QueryRow("select password from users where username=@username", sql.Named("username", credents.Username))
-	if err != nil {
-		// If there is an issue with the database, return a 500 error
-		fmt.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		respo := response{
-			Status: 500,
-			Message: "Internal server error",
-		}
-		resp, _ := json.Marshal(respo)
-		w.Write(resp)
-		return
-	}
-
-	storedCreds := &creds{}
-
-	// Store the obtained password in `storedCreds`
-	err = result.Scan(&storedCreds.Password)
-
-	if err != nil {
-		log.Println(err)
-		// If an entry with the username does not exist, send an "Unauthorized"(401) status
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnauthorized)
-			respo := response{
-				Status: 401,
-				Message: "Invalid username",
-			}
-			resp, _ := json.Marshal(respo)
-			w.Write(resp)
-			return
-		}
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		respo := response{
-			Status: 500,
-			Message: "Internal server error",
-		}
-		resp, _ := json.Marshal(respo)
-		w.Write(resp)
-		return
-	}
-
-	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(credents.Password)); err != nil {
-		// If the two passwords don't match, return a 401 status
-		log.Println(err)
-		w.WriteHeader(http.StatusUnauthorized)
-		respo := response{
-			Status: 401,
-			Message: "Incorrect password",
-		}
-		resp, _ := json.Marshal(respo)
-		w.Write(resp)
-		return
-	}
-
-	respo := response{
-		Status: 200,
-		Message: "All good",
-	}
-	resp, err := json.Marshal(respo)
-	if err != nil {
-		log.Println(err)
-	}
-	// Set user as authenticated
-	session.Values["authenticated"] = true
-	session.Save(r, w)
-
-	w.Write(resp)
-}
-
-func methodHandler(method string) Middleware {
-	return func(fn http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			log.Println(r.Method)
-			// if r.Method != method {
-			// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			// 	return
-			// }
-			w.Header().Set("Content-Type", "text/plain")
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Headers", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST")
-			fn(w, r)
-		}
-	}
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
-}
-
-func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		m := validPath.FindStringSubmatch(r.URL.Path)
-		if m == nil {
-			http.NotFound(w, r)
-			return
-		}
-		fn(w, r)
-	}
-}
-
-func setupRoutes() {
-	pool := websocket.NewPool()
-	go pool.Start()
-
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(pool, w, r)
-	})
-	http.HandleFunc("/view/", makeHandler(handler))
-	http.HandleFunc("/about", about)
-	http.HandleFunc("/signin", Chain(signIn, methodHandler("POST")))
-	http.HandleFunc("/addFact", Chain(addFact, methodHandler("POST")))
-	http.HandleFunc("/articles", Chain(articles, methodHandler("GET")))
-	http.HandleFunc("/addArticle", Chain(addArticle, methodHandler("POST")))
-	http.HandleFunc("/addArticleDraft", Chain(addArticleDraft, methodHandler("POST")))
-}
-
 func secret(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "cookie-name")
 
@@ -487,46 +422,49 @@ func secret(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "The cake is a lie!")
 }
 
-// Method ensures that url can only be requested with a specific method, else returns a 400 Bad Request
-func Method(m string) Middleware {
-
-	// Create a new Middleware
-	return func(f http.HandlerFunc) http.HandlerFunc {
-
-		// Define the http.HandlerFunc
-		return func(w http.ResponseWriter, r *http.Request) {
-
-			// Do middleware things
-			if r.Method != m {
-				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-				return
-			}
-
-			// Call the next middleware/handler in chain
-			f(w, r)
-		}
-	}
-}
-
-// Chain applies middlewares to a http.HandlerFunc
-func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
-	for _, m := range middlewares {
-		f = m(f)
-	}
-	return f
-}
-
 func main() {
 
 	f, err := ioutil.ReadFile("./keys.json")
 	if err != nil {
 		panic(err)
 	}
+	
 	err = json.Unmarshal(f, &keys)
+	if err != nil {
+		log.Println(err)
+	}
 
-	setupRoutes()
-	azureDB = db.InitAzureDB(keys)
+	client = db.InitMongodb(keys["MONGODB"]["USER"], keys["MONGODB"]["PASSWORD"])
+	defer client.Disconnect(context.TODO())
+	err = client.Ping(context.Background(), readpref.Primary())
+	
+    if err != nil {
+        log.Fatal("Couldn't connect to the database", err)
+    } else {
+        log.Println("Connected!")
+	}
+	
+	pool := websocket.NewPool()
+	go pool.Start()
+
+	mux := mux.NewRouter()
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(pool, w, r)
+	})
+	mux.HandleFunc("/about", about)
+	mux.HandleFunc("/login", mw.Chain(Authenticate, mw.MethodHandler("POST")))
+	mux.HandleFunc("/addFact", mw.Chain(addFact, mw.MethodHandler("POST")))
+	mux.HandleFunc("/articles", mw.Chain(Articles, mw.MethodHandler("GET", "PUT")))
+	mux.HandleFunc("/articles/{category}", mw.Chain(GetArticlesOfCategory, mw.MethodHandler("GET")))
+	mux.HandleFunc("/articles/{category}/{id}", mw.Chain(GetArticle, mw.MethodHandler("GET")))
+	mux.HandleFunc("/addArticle", mw.Chain(addArticle, mw.MethodHandler("POST")))
+	mux.HandleFunc("/addArticleDraft", mw.Chain(addArticleDraft, mw.MethodHandler("POST")))
+	// mux.HandleFunc("/test/", mw.Chain(Articles, mw.MethodHandler("GET")))
+	// mux.HandleFunc("/test/{category}/{id}", mw.Chain(Articles, mw.MethodHandler("GET")))
+
+	// setupRoutes()
+	// azureDB = db.InitAzureDB(keys)
 
 	log.Println("Now server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
