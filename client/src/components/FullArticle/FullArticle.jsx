@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { withRouter} from 'react-router';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -32,20 +33,23 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export default function FullArticle(props) {
+export default withRouter(function FullArticle(props) {
     const classes = useStyles();
     const [error, setError] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
     const [articles, setArticles] = useState([]);
     const [feed, setFeed] = useState(<div></div>);
+    const [articleUpdated, setArticleUpdated] = useState(false);
+
     console.log(props);
 
     const getResult = () => {
         var query = "";
         if (props.location.article) {
-            query = "?id=" + props.location.article.id;
+            query = "?id=" + encodeURIComponent(props.location.article.id);
         } else {
-            query = "?title=" + window.location.pathname.split("/").pop();
+            console.log("got here");
+            query = "?title=" + encodeURIComponent(window.location.pathname.split("/").pop());
         }
         fetch("http://172.25.59.60:8080/articles" + query)
         .then(res => res.json())
@@ -61,21 +65,18 @@ export default function FullArticle(props) {
 
     useEffect(() => {
         getResult();
-    }, [])
+    }, []);
 
-    // const handleEdit = () => {
-    //     if (articles.article) {
-    //         <AddArticle content={articles.article} />
-    //     }
-    // }
+    const handleArticleEdit = () => {
+        props.history.push("/articles/")
+    }
 
     useEffect(() => {
         if (articles.article) {
-            // console.log("articles: ", articles);
             setFeed(articles.article.map(item =>
                 <div key={item.title} className={classes.root}>
                 {(props.loggedIn) &&
-                    <AddArticle content={item} />
+                    <AddArticle content={item} parentState={articleUpdated} setParentState={setArticleUpdated} />
                 }               
                 <Paper className={classes.paper}>
                     <Grid container spacing={1}>
@@ -112,7 +113,7 @@ export default function FullArticle(props) {
                             </Grid>
                         </Grid>
                         <Grid className={classes.contentGrid} item xs={12}>
-                            <Typography component="p">
+                            <Typography variant="h5" component="p">
                                 {item.content}
                             </Typography>
                         </Grid>
@@ -127,8 +128,6 @@ export default function FullArticle(props) {
         }       
     }, [isLoaded]);
 
-    //return (
-        // (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : <div className={classes.root}> {feed} </div>
     if (error) {
         return (<div>Error: {error.message}</div>);
     } else if (!isLoaded) {
@@ -138,5 +137,4 @@ export default function FullArticle(props) {
             feed
         );
     }
-    //);
-}
+})

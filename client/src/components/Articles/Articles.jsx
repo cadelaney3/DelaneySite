@@ -115,7 +115,6 @@ export default withRouter(function Articles(props) {
   const handleArticleClick = item => () => {
     setArticle(<div><FullArticle article={item} /></div>);
     setIsArticleClicked(true);
-    // props.history.push(`/articles/${item.title}`);
   }
 
   useEffect(() => {
@@ -191,7 +190,7 @@ export default withRouter(function Articles(props) {
       <main className={classes.content}>
           { (error) ? error.message : (!isLoaded) ? <div>Loading...</div> : feed } {/*(isArticleClicked) ? article : feed */}
           {(props.loggedIn) &&
-            <AddArticle newArticle={newArticle} setNewArticle={setNewArticle}/>
+            <AddArticle parentState={newArticle} setParentState={setNewArticle}/>
           }
       </main>
     </div>

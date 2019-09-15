@@ -67,12 +67,11 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   });
 
 export default function AddArticle(props) {
-    console.log(props.content.title);
-
+    //console.log(props.content.title);
     const classes = useStyles();
     const [open, setOpen] = useState(false);
     const [article, setArticle] = useState({
-        title: props.content.title, //((props.content) ? props.content.title : ""),
+        title: (props.content) ? props.content.title : "",
         author: ((props.content) ? props.content.author : ""),
         category: (props.content) ? props.content.category : "",
         topic: (props.content) ? props.content.topic : "",
@@ -86,7 +85,7 @@ export default function AddArticle(props) {
   
     function handleClose() {
       setOpen(false);
-      props.setNewArticle(false);
+      props.setParentState(false);
     }
 
     const handleChange = name => event => {
@@ -126,7 +125,7 @@ export default function AddArticle(props) {
         .then(results => results.json())
         .then(data => {
             if (data.status === 200) {
-                props.setNewArticle(true);
+                props.setParentState(true);
                 console.log(data);
             } else {
                 console.log(data);

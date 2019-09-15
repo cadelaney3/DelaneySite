@@ -4,6 +4,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/List';
 import Grid from '@material-ui/core/Grid';
 import ButtonBase from '@material-ui/core/ButtonBase';
+import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Link from '@material-ui/core/Link';
@@ -18,7 +19,7 @@ const useStyles = makeStyles(theme => ({
   root: {
     // flexGrow: 1,
     display: 'flex',
-    padding: theme.spacing(3),
+    padding: theme.spacing(3,3),
   },
   image: {
       display: 'block',
@@ -186,12 +187,13 @@ export default function About(props) {
         return <div>Loading...</div>;
     } else {
         return (
-            <div className={classes.root}>
+            <React.Fragment>
+                <Toolbar />
                 {about}
                 {(props.loggedIn) &&
                     <AddFact newFact={newFact} setNewFact={setNewFact} />
                 } 
-            </div>
+            </React.Fragment>
         );
     }
 }
