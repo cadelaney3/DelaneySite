@@ -37,7 +37,7 @@ export default function App() {
         <Switch>
           <Route exact path="/ws" render={(props) => <WS {...props} loggedIn={loggedIn} /> } />
           <Route 
-            exact path="/articles" 
+            exact path="/articles/" 
             render={(props) => <Articles
               {...props}
               loggedIn={loggedIn}

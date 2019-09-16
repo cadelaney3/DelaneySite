@@ -102,6 +102,14 @@ func MethodHandler(methods ...string) Middleware {
 	}
 }
 
+func Drafts() Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			
+		}
+	}
+}
+
 // Method ensures that url can only be requested with a specific method, else returns a 400 Bad Request
 func Method(m string) Middleware {
 

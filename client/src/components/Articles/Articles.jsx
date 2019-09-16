@@ -96,7 +96,7 @@ export default withRouter(function Articles(props) {
       query = "?cat=" + filter.toLowerCase();
       console.log("filter is null");
     }
-    fetch("http://172.25.59.60:8080/articles" + query)
+    fetch("http://172.25.59.60:8080/articles/" + query)
     .then(res => res.json())
     .then(result => {
         setArticles(result);

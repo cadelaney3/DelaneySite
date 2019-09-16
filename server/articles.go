@@ -139,10 +139,12 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetArticlesOfCategory(w http.ResponseWriter, r *http.Request) {
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	collection := client.Database("delaney-db").Collection("articles")
 	path := strings.Split(r.URL.Path, "/")
-	filter := bson.M{"category": path[len(path)-1]}
+	category := path[len(path) - 1]
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	collection := client.Database("delaney-db").Collection()
+
+	filter := bson.M{"category": category}
 	documentsReturned, err := collection.Find(ctx, filter)
 	if err != nil {
 		log.Printf("Error getting category documents: %v\n", err)
