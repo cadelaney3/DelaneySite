@@ -2,11 +2,12 @@ package middleware
 
 import (
 	"context"
-	"net/http"
-	"strings"
-	"os"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/cadelaney3/delaneySite/utils"
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -24,15 +25,15 @@ func Auth() Middleware {
 	return func(fn http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			auth := "/swagmaster"
-			requestPath :=  r.URL.Path
+			requestPath := r.URL.Path
 
 			if auth != requestPath {
 				return
 			}
 
-			response := make(map[string] interface{})
+			response := make(map[string]interface{})
 			tokenHeader := r.Header.Get("Authorization") //Grab the token from the header
-	
+
 			if tokenHeader == "" { //Token is missing, returns with error code 403 Forbidden
 				response = utils.Message(http.StatusForbidden, "Missing auth token")
 				w.WriteHeader(http.StatusForbidden)
@@ -49,14 +50,14 @@ func Auth() Middleware {
 				utils.Response(w, response)
 				return
 			}
-	
+
 			tokenPart := splitted[1] //Grab the token part, what we are truly interested in
 			tk := &Token{}
-	
+
 			token, err := jwt.ParseWithClaims(tokenPart, tk, func(token *jwt.Token) (interface{}, error) {
 				return []byte(os.Getenv("token_password")), nil
 			})
-	
+
 			if err != nil { //Malformed token, returns with http code 403 as usual
 				response = utils.Message(http.StatusForbidden, "Malformed authentication token")
 				w.WriteHeader(http.StatusForbidden)
@@ -64,7 +65,7 @@ func Auth() Middleware {
 				utils.Response(w, response)
 				return
 			}
-	
+
 			if !token.Valid { //Token is invalid, maybe not signed on this server
 				response = utils.Message(http.StatusForbidden, "Token is not valid.")
 				w.WriteHeader(http.StatusForbidden)
@@ -72,7 +73,7 @@ func Auth() Middleware {
 				utils.Response(w, response)
 				return
 			}
-	
+
 			//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
 			fmt.Sprintf("User %", tk.UserId) //Useful for monitoring
 			ctx := context.WithValue(r.Context(), "user", tk.UserId)
@@ -87,11 +88,11 @@ func MethodHandler(methods ...string) Middleware {
 		return func(w http.ResponseWriter, r *http.Request) {
 			log.Println(r.Method)
 			for _, method := range methods {
-				if r.Method == method || r.Method == "OPTIONS" {
+				if method == "OPTIONS" || r.Method == method {
 					w.Header().Set("Content-Type", "application/json")
 					w.Header().Set("Access-Control-Allow-Origin", "*")
 					w.Header().Set("Access-Control-Allow-Headers", "*")
-					w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT")
+					w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
 					fn(w, r)
 					return
 				}
@@ -105,7 +106,7 @@ func MethodHandler(methods ...string) Middleware {
 func Drafts() Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			
+
 		}
 	}
 }

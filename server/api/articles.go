@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Article struct {
-	ID          string    `json:"id" bson:"_id,omitempty"`
-	Title       string    `json:"title"`
-	Category    string    `json:"category"`
-	Tags        []string  `json:"tags"`
-	Description string    `json:"description"`
-	Content     string    `json:"content"`
-	Date        time.Time `json:"creation_time" bson:"creation_date"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Title       string             `json:"title"`
+	Category    string             `json:"category"`
+	Tags        []string           `json:"tags"`
+	Description string             `json:"description"`
+	Content     string             `json:"content"`
+	Date        time.Time          `json:"creation_time" bson:"creation_date"`
 }
 
 type ArticleStore interface {

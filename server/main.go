@@ -4,18 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
-	"strings"
 	"time"
-	"golang.org/x/crypto/bcrypt"
+
 	mw "github.com/cadelaney3/delaneySite/middleware"
-	"github.com/cadelaney3/delaneySite/store"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
+	"github.com/cadelaney3/delaneySite/store/mongodb"
 	"github.com/cadelaney3/delaneySite/utils"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -23,7 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var keys = make(map[string]map[string]string)
@@ -31,7 +29,7 @@ var client *mongo.Client
 
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-	key   = []byte(os.Getenv("SESSION_KEY"))
+	key         = []byte(os.Getenv("SESSION_KEY"))
 	cookieStore = sessions.NewCookieStore(key)
 )
 
@@ -60,12 +58,32 @@ type Token struct {
 }
 
 type ArticleStore struct {
-	articleStore store.Articles 
+	articleStore mongodb.Article
+}
+
+type Client struct {
+	cli *mongodb.Client
+}
+
+func (c *Client) FetchAllArticles(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	articles, err := c.cli.FetchAllArticles(ctx, false)
+	if err != nil {
+		log.Printf("Error fetching articles: %s", err)
+		message := utils.Message(http.StatusInternalServerError, "Internal server error")
+		w.WriteHeader(http.StatusNoContent)
+		utils.Response(w, message)
+		return
+	}
+	message := utils.Message(http.StatusOK, "Successfully retrieved articles")
+	message["items"] = articles
+	w.WriteHeader(http.StatusOK)
+	utils.Response(w, message)
 }
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	credentials := Credentials{}
-	session, _ := store.Get(r, "cookie-name")
+	session, _ := cookieStore.Get(r, "cookie-name")
 
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
@@ -132,7 +150,7 @@ func serveWs(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
 }
 
 func secret(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
+	session, _ := cookieStore.Get(r, "cookie-name")
 
 	// Check if user is authenticated
 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
@@ -156,15 +174,14 @@ func main() {
 		log.Println(err)
 	}
 
-	client = db.InitMongodb(keys["MONGODB"]["USER"], keys["MONGODB"]["PASSWORD"])
-	defer client.Disconnect(context.TODO())
-	err = client.Ping(context.Background(), readpref.Primary())
-
+	c := &Client{}
+	c.cli, err = mongodb.InitMongodb(keys["MONGODB"]["USER"], keys["MONGODB"]["PASSWORD"])
+	fmt.Printf("%T\n", c.cli)
 	if err != nil {
-		log.Fatal("Couldn't connect to the database", err)
-	} else {
-		log.Println("Connected!")
+		log.Printf("Error connection to mongdb: %s", err)
 	}
+
+	defer c.cli.Client.Disconnect(context.TODO())
 
 	pool := websocket.NewPool()
 	go pool.Start()
@@ -174,11 +191,11 @@ func main() {
 		serveWs(pool, w, r)
 	})
 	// mux.HandleFunc("/about", about)
-	mux.HandleFunc("/login", mw.Chain(Authenticate, mw.MethodHandler("POST")))
+	//mux.HandleFunc("/login", mw.Chain(Authenticate, mw.MethodHandler("POST")))
 	//mux.HandleFunc("/addFact", mw.Chain(addFact, mw.MethodHandler("POST")))
-	mux.HandleFunc("/articles/", mw.Chain(Articles, mw.MethodHandler("GET", "PUT")))
-	mux.HandleFunc("/articles/{category}", mw.Chain(GetArticlesOfCategory, mw.MethodHandler("GET")))
-	mux.HandleFunc("/articles/{category}/{id}", mw.Chain(GetArticle, mw.MethodHandler("GET")))
+	mux.HandleFunc("/articles", mw.Chain(c.FetchAllArticles, mw.MethodHandler("GET", "PUT")))
+	//mux.HandleFunc("/articles/{category}", mw.Chain(c.SearchArticlesByCategory, mw.MethodHandler("GET")))
+	//mux.HandleFunc("/articles/{category}/{id}", mw.Chain(c.SearchArticlesById, mw.MethodHandler("GET")))
 	//mux.HandleFunc("/articles/drafts/", mw.Chain(GetArticles))
 	//mux.HandleFunc("/addArticle", mw.Chain(addArticle, mw.MethodHandler("POST")))
 	//mux.HandleFunc("/addArticleDraft", mw.Chain(addArticleDraft, mw.MethodHandler("POST")))

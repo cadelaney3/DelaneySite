@@ -8,11 +8,12 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type Client struct {
-	client *mongo.Client
-	db     *mongo.Database
+	Client *mongo.Client
+	Db     *mongo.Database
 }
 
 func InitMongodb(user, password string) (*Client, error) {
@@ -32,11 +33,19 @@ func InitMongodb(user, password string) (*Client, error) {
 		return nil, fmt.Errorf("Error connecting to MongoDB: %s", err)
 	}
 
+	err = client.Ping(context.Background(), readpref.Primary())
+
+	if err != nil {
+		log.Fatal("Couldn't connect to the database", err)
+	} else {
+		log.Println("Connected!")
+	}
+
 	db := client.Database("delaney-db")
 
 	c := &Client{
-		client: client,
-		db:     db,
+		Client: client,
+		Db:     db,
 	}
 
 	return c, nil

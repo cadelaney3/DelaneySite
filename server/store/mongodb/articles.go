@@ -9,10 +9,10 @@ import (
 
 	"time"
 
-	"github.com/cadelaney3/delaneySite/server/api"
+	"github.com/cadelaney3/delaneySite/api"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Article struct {
@@ -25,12 +25,12 @@ type Article struct {
 	Date        time.Time          `json:"creation_time" bson:"creation_date"`
 }
 
-func (c *Client) FetchAllArticles(ctx context.Context, draft bool) (api.Article, error) {
+func (c *Client) FetchAllArticles(ctx context.Context, draft bool) ([]*api.Article, error) {
 	var collection *mongo.Collection
 	if draft {
-		collection = c.db.Collection("articleDrafts")
+		collection = c.Db.Collection("articleDrafts")
 	} else {
-		collection = c.db.Collection("articles")
+		collection = c.Db.Collection("articles")
 	}
 	documentsReturned, err := collection.Find(ctx, bson.D{})
 	if err != nil {
@@ -55,9 +55,9 @@ func (c *Client) FetchAllArticles(ctx context.Context, draft bool) (api.Article,
 func (c *Client) SaveArticle(ctx context.Context, article *api.Article, draft bool) (string, error) {
 	var collection *mongo.Collection
 	if draft {
-		collection = c.db.Collection("articleDrafts")
+		collection = c.Db.Collection("articleDrafts")
 	} else {
-		collection = c.db.Collection("articles")
+		collection = c.Db.Collection("articles")
 	}
 	article.Date = time.Now()
 	_, err := collection.InsertOne(ctx, article)
@@ -76,12 +76,12 @@ func (c *Client) DeleteArticleById(ctx context.Context, id string, draft bool) e
 
 	var collection *mongo.Collection
 	if draft {
-		collection = c.db.Collection("articleDrafts")
+		collection = c.Db.Collection("articleDrafts")
 	} else {
-		collection = c.db.Collection("articles")
+		collection = c.Db.Collection("articles")
 	}
 
-	err = collection.DeleteOne(bson.M{"_id": objId})
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": objId})
 	if err != nil {
 		return fmt.Errorf("Error deleting document with id %s: %s", id, err)
 	}
@@ -93,7 +93,7 @@ func (c *Client) SearchArticlesById(ctx context.Context, id string) (*api.Articl
 	if err != nil {
 		return nil, fmt.Errorf("Error converting id to bson objectId: %s", err)
 	}
-	collection := c.db.Collection("articles")
+	collection := c.Db.Collection("articles")
 
 	article := &api.Article{}
 	filter := bson.M{"_id": objId}
@@ -106,7 +106,7 @@ func (c *Client) SearchArticlesById(ctx context.Context, id string) (*api.Articl
 }
 
 func (c *Client) SearchArticlesByCategory(ctx context.Context, category string) ([]*api.Article, error) {
-	collection := c.db.Collection("articles")
+	collection := c.Db.Collection("articles")
 	filter := bson.M{"category": category}
 	documentsReturned, err := collection.Find(ctx, filter)
 	if err != nil {
