@@ -22,8 +22,8 @@ type ArticleStore interface {
 	FetchAllArticles(context.Context) (*[]Article, error)
 	SaveArticle(context.Context, *Article) (string, error)
 	DeleteArticleById(context.Context, string) error
-	SearchArticlesById(context.Context, string) (*Article, error)
-	SearchArticlesByCategory(context.Context, string) ([]*Article, error)
+	GetArticleById(context.Context, string) (*Article, error)
+	GetArticlesByCategory(context.Context, string) ([]*Article, error)
 }
 
 func (a *Article) String() string {

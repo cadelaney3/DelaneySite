@@ -88,7 +88,7 @@ func (c *Client) DeleteArticleById(ctx context.Context, id string, draft bool) e
 	return nil
 }
 
-func (c *Client) SearchArticlesById(ctx context.Context, id string) (*api.Article, error) {
+func (c *Client) GetArticleById(ctx context.Context, id string) (*api.Article, error) {
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("Error converting id to bson objectId: %s", err)
@@ -105,7 +105,7 @@ func (c *Client) SearchArticlesById(ctx context.Context, id string) (*api.Articl
 	return article, nil
 }
 
-func (c *Client) SearchArticlesByCategory(ctx context.Context, category string) ([]*api.Article, error) {
+func (c *Client) GetArticlesByCategory(ctx context.Context, category string) ([]*api.Article, error) {
 	collection := c.Db.Collection("articles")
 	filter := bson.M{"category": category}
 	documentsReturned, err := collection.Find(ctx, filter)

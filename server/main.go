@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cadelaney3/delaneySite/api"
 	mw "github.com/cadelaney3/delaneySite/middleware"
 	"github.com/cadelaney3/delaneySite/pkg/websocket"
 	"github.com/cadelaney3/delaneySite/store/mongodb"
@@ -61,13 +62,21 @@ type ArticleStore struct {
 	articleStore mongodb.Article
 }
 
-type Client struct {
-	cli *mongodb.Client
+type DB struct {
+	client *mongodb.Client
 }
 
-func (c *Client) FetchAllArticles(w http.ResponseWriter, r *http.Request) {
+func (db *DB) HandleArticles(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		db.FetchAllArticles(w, r)
+	} else if r.Method == http.MethodPost {
+		db.SaveArticle(w, r)
+	}
+}
+
+func (db *DB) FetchAllArticles(w http.ResponseWriter, r *http.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	articles, err := c.cli.FetchAllArticles(ctx, false)
+	articles, err := db.client.FetchAllArticles(ctx, false)
 	if err != nil {
 		log.Printf("Error fetching articles: %s", err)
 		message := utils.Message(http.StatusInternalServerError, "Internal server error")
@@ -77,6 +86,80 @@ func (c *Client) FetchAllArticles(w http.ResponseWriter, r *http.Request) {
 	}
 	message := utils.Message(http.StatusOK, "Successfully retrieved articles")
 	message["items"] = articles
+	w.WriteHeader(http.StatusOK)
+	utils.Response(w, message)
+}
+
+func (db *DB) SaveArticle(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	incomingArticle := api.Article{}
+	err := json.NewDecoder(r.Body).Decode(&incomingArticle)
+	if err != nil {
+		log.Println(err)
+	}
+	incomingArticle.Date = time.Now()
+	_, err = db.client.SaveArticle(ctx, &incomingArticle, false)
+	if err != nil {
+		log.Printf("Error inserting document: ", err)
+		message := utils.Message(http.StatusInternalServerError, "Internal server error")
+		w.WriteHeader(http.StatusInternalServerError)
+		utils.Response(w, message)
+		return
+	}
+	//message := utils.Message(http.StatusNoContent, "Successfully deleted article")
+	w.WriteHeader(http.StatusNoContent)
+	//utils.Response(w, message)
+}
+
+func (db *DB) GetArticlesByCategory(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	params := mux.Vars(r)
+	category := params["category"]
+	articles, err := db.client.GetArticlesByCategory(ctx, category)
+	if err != nil {
+		log.Printf("Error fetching articles: %s", err)
+		message := utils.Message(http.StatusInternalServerError, "Internal server error")
+		w.WriteHeader(http.StatusNoContent)
+		utils.Response(w, message)
+		return
+	}
+	message := utils.Message(http.StatusOK, "Successfully retrieved articles")
+	message["items"] = articles
+	w.WriteHeader(http.StatusOK)
+	utils.Response(w, message)
+}
+
+func (db *DB) GetArticleById(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	params := mux.Vars(r)
+	id := params["id"]
+	article, err := db.client.GetArticleById(ctx, id)
+	if err != nil {
+		log.Printf("Error fetching article of id %s: %s", id, err)
+		message := utils.Message(http.StatusInternalServerError, "Internal server error")
+		w.WriteHeader(http.StatusNoContent)
+		utils.Response(w, message)
+		return
+	}
+	message := utils.Message(http.StatusOK, "Successfully retrieved article")
+	message["items"] = article
+	w.WriteHeader(http.StatusOK)
+	utils.Response(w, message)
+}
+
+func (db *DB) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	params := mux.Vars(r)
+	id := params["id"]
+	err := db.client.DeleteArticleById(ctx, id, false)
+	if err != nil {
+		log.Printf("Error deleting article of id %s: %s", id, err)
+		message := utils.Message(http.StatusInternalServerError, "Internal server error")
+		w.WriteHeader(http.StatusInternalServerError)
+		utils.Response(w, message)
+		return
+	}
+	message := utils.Message(http.StatusOK, "Successfully deleted article")
 	w.WriteHeader(http.StatusOK)
 	utils.Response(w, message)
 }
@@ -174,14 +257,13 @@ func main() {
 		log.Println(err)
 	}
 
-	c := &Client{}
-	c.cli, err = mongodb.InitMongodb(keys["MONGODB"]["USER"], keys["MONGODB"]["PASSWORD"])
-	fmt.Printf("%T\n", c.cli)
+	db := &DB{}
+	db.client, err = mongodb.InitMongodb(keys["MONGODB"]["USER"], keys["MONGODB"]["PASSWORD"])
 	if err != nil {
 		log.Printf("Error connection to mongdb: %s", err)
 	}
 
-	defer c.cli.Client.Disconnect(context.TODO())
+	defer db.client.Client.Disconnect(context.TODO())
 
 	pool := websocket.NewPool()
 	go pool.Start()
@@ -193,9 +275,9 @@ func main() {
 	// mux.HandleFunc("/about", about)
 	//mux.HandleFunc("/login", mw.Chain(Authenticate, mw.MethodHandler("POST")))
 	//mux.HandleFunc("/addFact", mw.Chain(addFact, mw.MethodHandler("POST")))
-	mux.HandleFunc("/articles", mw.Chain(c.FetchAllArticles, mw.MethodHandler("GET", "PUT")))
-	//mux.HandleFunc("/articles/{category}", mw.Chain(c.SearchArticlesByCategory, mw.MethodHandler("GET")))
-	//mux.HandleFunc("/articles/{category}/{id}", mw.Chain(c.SearchArticlesById, mw.MethodHandler("GET")))
+	mux.HandleFunc("/articles", mw.Chain(db.HandleArticles, mw.MethodHandler("GET", "POST")))
+	mux.HandleFunc("/articles/{category}", mw.Chain(db.GetArticlesByCategory, mw.MethodHandler("GET")))
+	mux.HandleFunc("/articles/{category}/{id}", mw.Chain(db.GetArticleById, mw.MethodHandler("GET")))
 	//mux.HandleFunc("/articles/drafts/", mw.Chain(GetArticles))
 	//mux.HandleFunc("/addArticle", mw.Chain(addArticle, mw.MethodHandler("POST")))
 	//mux.HandleFunc("/addArticleDraft", mw.Chain(addArticleDraft, mw.MethodHandler("POST")))
